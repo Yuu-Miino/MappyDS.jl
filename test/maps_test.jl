@@ -205,10 +205,12 @@ end
     @test length(res.trajectory) == 1
     @test res.trajectory[1].y[2, end] ≈ res.y[1]
 
-    mixed = Trajectory([
-        TrajectorySegment(:a, :discrete, zeros(2, 2)),
-        TrajectorySegment(:b, :continuous, zeros(3, 4), 0.0:3.0),
-    ])
+    mixed = Trajectory(
+        [
+            TrajectorySegment(:a, :discrete, zeros(2, 2)),
+            TrajectorySegment(:b, :continuous, zeros(3, 4), 0.0:3.0),
+        ]
+    )
     @test [dim(s) for s in mixed] == [2, 3]
     @test_throws ArgumentError mixed.y
     s1 = TrajectorySegment(:a, :continuous, ones(2, 3), [0.0, 1.0, 2.0])

@@ -65,6 +65,7 @@ _param_keys(p) = ()
 # Derivatives of `g ∘ f` given those of `f` (so far) and of the step `g`:
 # `D(g∘f) = Dg Df` and `D²(g∘f) = D²g[Df, Df] + Dg D²f`.
 function _compose(jac, hes, jac_step, hes_step)
+    jac_step === nothing && return nothing, nothing
     jac === nothing && return jac_step, hes_step
     hes_new = nothing
     if hes !== nothing && hes_step !== nothing
