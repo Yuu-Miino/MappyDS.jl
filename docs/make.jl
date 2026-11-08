@@ -23,6 +23,12 @@ makedocs(;
     ),
     pages = [
         "Home" => "index.md",
+        "User guide" => [
+            "guide/modes.md",
+            "guide/derivatives.md",
+            "guide/root.md",
+        ],
+        "API reference" => "api.md",
         "Python package" => "python.md",
         "References" => "references.md",
     ],
