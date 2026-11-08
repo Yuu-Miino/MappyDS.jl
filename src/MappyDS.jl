@@ -17,15 +17,19 @@ The implementation plan and the API mapping from the Python package are in
 """
 module MappyDS
 
-using LinearAlgebra
-using Printf
-using StaticArrays
-using ForwardDiff
-using SciMLBase
-using OrdinaryDiffEqTsit5: Tsit5
-using OrdinaryDiffEqVerner: Vern7, Vern9
-using SimpleNonlinearSolve
-using PrecompileTools: @setup_workload, @compile_workload
+# Dependencies are imported as modules and used qualified
+# (`ForwardDiff.jacobian`, `StaticArrays.SVector`, ...), which keeps the
+# ExplicitImports checks of the test suite trivially satisfied; names used
+# often are brought in with `using Module: name` where they are used.
+import ForwardDiff
+import LinearAlgebra
+import OrdinaryDiffEqTsit5
+import OrdinaryDiffEqVerner
+import PrecompileTools
+import Printf
+import SciMLBase
+import SimpleNonlinearSolve
+import StaticArrays
 
 include("exceptions.jl")
 include("plot_api.jl")
@@ -43,9 +47,9 @@ export MappyError, UnknownModeError, TransitionError, ModeNotTerminatedError,
     DerivativeError
 export plot2d, plot_trajectory
 
-# @setup_workload begin
+# PrecompileTools.@setup_workload begin
 #     # Izhikevich example of the Python docstring; filled in at 0.1.0.
-#     @compile_workload begin
+#     PrecompileTools.@compile_workload begin
 #     end
 # end
 

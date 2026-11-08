@@ -10,7 +10,10 @@ using ReTestItems
         Aqua.test_all(MappyDS)
     end
     @testset "Code linting (JET.jl)" begin
-        JET.test_package(MappyDS; target_defined_modules = true)
+        # `target_defined_modules` exists up to JET 0.9 (the series for Julia
+        # 1.10); later versions analyse the package's own modules by default.
+        jet_kwargs = pkgversion(JET) < v"0.10" ? (; target_defined_modules = true) : (;)
+        JET.test_package(MappyDS; toplevel_logger = nothing, jet_kwargs...)
     end
     @testset "Explicit imports" begin
         @test check_no_implicit_imports(MappyDS) === nothing
