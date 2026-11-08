@@ -6,9 +6,9 @@ using DocumenterInterLinks
 DocMeta.setdocmeta!(MappyDS, :DocTestSetup, :(using MappyDS); recursive = true)
 
 # Cross-references to the Python documentation (Sphinx objects.inv), e.g.
-# [`PoincareMap`](@extref mappy_ds mappy_ds.PoincareMap).
+# [`PoincareMap`](@extref mappyds mappy_ds.PoincareMap).
 links = InterLinks(
-    "mappy_ds" => "https://yuu-miino.github.io/doc.mappy/latest/objects.inv",
+    "mappyds" => "https://yuu-miino.github.io/doc.mappy/latest/objects.inv",
 )
 bib = CitationBibliography(joinpath(@__DIR__, "src", "refs.bib"); style = :numeric)
 

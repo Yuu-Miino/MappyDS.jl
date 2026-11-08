@@ -28,9 +28,9 @@ struct TransitionError <: MappyError
     border::Union{Nothing, Int, Symbol}
     reason::Union{Nothing, String}
 end
-TransitionError(mode::Symbol; border=nothing, reason=nothing) = TransitionError(mode, border, reason)
+TransitionError(mode::Symbol; border = nothing, reason = nothing) = TransitionError(mode, border, reason)
 function Base.showerror(io::IO, e::TransitionError)
-    if e.reason !== nothing
+    return if e.reason !== nothing
         print(io, "transition from mode ", repr(e.mode), ": ", e.reason)
     elseif e.border === nothing
         print(io, "no transition is defined from mode ", repr(e.mode))
@@ -48,8 +48,10 @@ struct ModeNotTerminatedError <: MappyError
     mode::Symbol
     max_interval::Float64
 end
-Base.showerror(io::IO, e::ModeNotTerminatedError) = print(io,
-    "continuous mode ", repr(e.mode), " did not reach any border within max_interval=", e.max_interval)
+Base.showerror(io::IO, e::ModeNotTerminatedError) = print(
+    io,
+    "continuous mode ", repr(e.mode), " did not reach any border within max_interval=", e.max_interval
+)
 
 """
     DerivativeError(fun, msg)
