@@ -22,16 +22,16 @@ continuation stops at the first step with `success == false` or
 (e.g. with a solved parameter updated); `info` is stored in
 [`ContinuationStep`](@ref).
 """
-struct StepFunctionResult{T}
+struct StepFunctionResult
     success::Bool
-    y::Union{Nothing, T}
+    y::Any
     params::Union{Nothing, NamedTuple}
     info::Union{Nothing, Dict{Symbol, Any}}
 end
 
-function StepFunctionResult(success::Bool, y = nothing, params = nothing, info = nothing)
-    return StepFunctionResult{typeof(y)}(success, y, params, info)
-end
+StepFunctionResult(success::Bool) = StepFunctionResult(success, nothing, nothing, nothing)
+StepFunctionResult(success::Bool, y) = StepFunctionResult(success, y, nothing, nothing)
+StepFunctionResult(success::Bool, y, params) = StepFunctionResult(success, y, params, nothing)
 
 """
     continuation(fun, y0, params::NamedTuple, param_key::Symbol, end_value;

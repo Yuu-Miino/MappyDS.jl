@@ -52,7 +52,7 @@ end
 end
 
 @testitem "find_cycle failures" setup = [Fixtures] begin
-    no_fixed_point = Mapping((x, _) -> x + 1 + x^2, 1)
+    no_fixed_point = Mapping((x, _) -> x[1] + 1 + x[1]^2, 1)
     res = find_cycle(Diffeomorphism(no_fixed_point), [0.0])
     @test !res.success
     @test res.y === nothing && res.eigvals === nothing && res.eigvecs === nothing
@@ -99,7 +99,7 @@ end
         @test s.y ≈ [x, b * x] rtol = 1.0e-8
     end
 
-    saddle_node = Mapping((x, p) -> x + p.p - x^2, 1)
+    saddle_node = Mapping((x, p) -> x[1] + p.p - x[1]^2, 1)
     sn = trace_cycle(Diffeomorphism(saddle_node), [0.5], (p = 0.25,), :p, -0.25; resolution = 3)
     @test [s.params.p for s in sn] == [0.25, 0.0]
     @test sn[1].y ≈ [0.5]

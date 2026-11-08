@@ -86,6 +86,7 @@ end
 end
 
 @testitem "parametrised border with a non-trivial gradient" setup = [Fixtures] begin
+    using StaticArrays: SVector
     rot = VectorField((y, p) -> SVector(-p.w * y[2] + 0.5 * y[1], p.w * y[1]), 2)
     circle = Border((y, p) -> y[1]^2 + y[2]^2 - p.r^2, 2)
     mode = ContinuousMode(:rot, rot; borders = (circle,), TIGHT...)
@@ -126,6 +127,7 @@ end
 end
 
 @testitem "mode not terminated" begin
+    using StaticArrays: SVector
     far = Border((y, _) -> y[1] - 1.0e6, 2)
     slow = VectorField((y, _) -> SVector(one(y[1]), zero(y[1])), 2)
     mode = ContinuousMode(:slow, slow; borders = (far,), max_interval = 1.0)
@@ -143,6 +145,7 @@ end
 end
 
 @testitem "border direction is respected" begin
+    using StaticArrays: SVector
     up = VectorField((y, _) -> SVector(one(y[1])), 1)
     at_one = Border((y, _) -> y[1] - 1, 1; direction = -1)
     at_two = Border((y, _) -> y[1] - 2, 1; direction = 1)

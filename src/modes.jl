@@ -198,6 +198,9 @@ function evolve(mode::ContinuousMode{<:VectorField{N}}, y0, p = nothing; jacobia
                 Y[i, k] = u[i]
             end
         end
+        # The dense output of the last (truncated) step is not exact at the
+        # event time; the segment ends at the state the mode actually ends in.
+        Y[:, end] = y1
         segment = TrajectorySegment(mode.name, :continuous, Y, ts)
     end
 

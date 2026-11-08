@@ -23,6 +23,7 @@
 end
 
 @testitem "evaluation returns Float64 vectors" setup = [Fixtures] begin
+    using StaticArrays: SVector
     y = henon([0.5, 0.1], HENON_PARAMS)
     @test y isa Vector{Float64}
     @test y ≈ [1 - 1.4 * 0.25 + 0.1, 0.15]
@@ -65,6 +66,7 @@ end
 end
 
 @testitem "a function may be shared by modes and branch on the state" setup = [Fixtures] begin
+    using StaticArrays: SVector
     f = Mapping((y, _) -> y[1] > 0 ? SVector(2y[1], y[2]) : SVector(y[1], 3y[2]), 2)
     @test f([1.0, 1.0]) == [2.0, 1.0]
     @test f([-1.0, 1.0]) == [-1.0, 3.0]
