@@ -53,7 +53,6 @@ using LinearAlgebra: LinearAlgebra, I, dot
 using StaticArrays: SVector, SArray
 import ForwardDiff
 import OrdinaryDiffEqTsit5
-import PrecompileTools
 import Printf
 import SciMLBase
 import SimpleNonlinearSolve
@@ -70,6 +69,8 @@ include("plot_api.jl")
 # Milestones (see the release plan, §5):
 # 0.2.0: parameter derivatives (jac_p), arclength_continuation, trace_cycle_arclength
 # 0.3.0: mixed derivatives (hes_p), find_local_bf, trace_local_bf(_arclength), Makie extension
+# A PrecompileTools workload is deferred until the API has settled (the
+# specialisations depend on the user's function types anyway).
 
 export MappyError, UnknownModeError, TransitionError, ModeNotTerminatedError,
     DerivativeError
