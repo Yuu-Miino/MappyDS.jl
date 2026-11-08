@@ -4,6 +4,10 @@
 CurrentModule = MappyDS
 ```
 
+```@docs
+MappyDS
+```
+
 ## System functions
 
 ```@autodocs

@@ -56,7 +56,18 @@ function find_cycle(map::AbstractMap, y0, p = nothing; period::Integer = 1, alg 
     end
     nf = SciMLBase.NonlinearFunction{false}(residual; jac = jac)
     prob = SciMLBase.NonlinearProblem(nf, y, nothing)
-    sol = SciMLBase.solve(prob, alg; abstol, reltol, maxiters, kwargs...)
+    sol = try
+        SciMLBase.solve(prob, alg; abstol, reltol, maxiters, kwargs...)
+    catch err
+        # A singular Jacobian (e.g. a search that wanders to a critical point
+        # of a map without fixed points) or a mode that cannot be evaluated
+        # at an iterate is a failed search, not a programming error.
+        err isa Union{LinearAlgebra.SingularException, LinearAlgebra.LAPACKException, MappyError, DomainError} || rethrow()
+        nothing
+    end
+    if sol === nothing
+        return CycleResult(false, SciMLBase.ReturnCode.Failure, nothing, nothing, nothing, nfev[], residual(y, nothing))
+    end
     u = Vector{Float64}(sol.u)
     resid = residual(u, nothing)
     nfev[] -= 1
