@@ -8,6 +8,8 @@ as interpreted by Julia's Pkg (in `0.x`, a minor bump is breaking).
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-08
+
 Port of `mappy-ds` 0.1.0 (the mode concept and the numerics of Miino,
 *NOLTA, IEICE* 15(2), 2024) to Julia.
 
@@ -48,4 +50,5 @@ Port of `mappy-ds` 0.1.0 (the mode concept and the numerics of Miino,
 - CI (tests on Julia LTS / stable / pre-release, Runic, docs), TagBot,
   Dependabot, Documenter deployment into `doc.mappy/julia/`.
 
-[Unreleased]: https://github.com/Yuu-Miino/MappyDS.jl/commits/main
+[Unreleased]: https://github.com/Yuu-Miino/MappyDS.jl/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Yuu-Miino/MappyDS.jl/releases/tag/v0.1.0
