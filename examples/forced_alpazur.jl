@@ -135,6 +135,8 @@ for s in curve
     println("  $(round(s.params.V; digits = 5))  $(round(s.params.B1; digits = 5))")
 end
 
+#-
+
 fig = Figure(; size = (600, 350))
 ax = Axis(fig[1, 1]; xlabel = "V", ylabel = "B1", title = "period-doubling curve")
 lines!(ax, [s.params.V for s in curve], [s.params.B1 for s in curve]; color = :red)

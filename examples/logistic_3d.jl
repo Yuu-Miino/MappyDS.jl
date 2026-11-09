@@ -63,6 +63,8 @@ alphas = [s.params.alpha for s in steps]
 moduli = reduce(hcat, [signed_moduli(s.info[:eigvals]) for s in steps])
 thetas = reduce(hcat, [angle.(s.info[:eigvals]) for s in steps])
 
+#-
+
 fig = Figure(; size = (700, 500))
 ax1 = Axis(fig[1, 1]; ylabel = "sign * |μ|")
 ax2 = Axis(fig[2, 1]; xlabel = "alpha", ylabel = "arg μ")
@@ -87,6 +89,8 @@ println("traced $(length(curve)) bifurcation points to beta = $(last2.params.bet
 alphas_bf = [s.params.alpha for s in curve]
 betas_bf = [s.params.beta for s in curve]
 moduli_bf = reduce(hcat, [signed_moduli(s.info[:eigvals]) for s in curve])
+
+#-
 
 fig = Figure(; size = (700, 500))
 ax1 = Axis(fig[1, 1]; ylabel = "beta", title = "period-doubling curve")
