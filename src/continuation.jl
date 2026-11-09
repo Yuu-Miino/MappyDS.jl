@@ -132,20 +132,15 @@ end
 # below which the iteration stalls or wanders instead of converging; when
 # the residual stops decreasing (or `fun` fails at a wandering iterate), the
 # iterate with the smallest residual is accepted provided that residual is
-# already below the tolerance.
+# already below the tolerance. An exception from `fun` fails the correction
+# (the caller retries with a smaller step).
 function _arclength_corrector(fun, u_pred::Vector{Float64}, base::Vector{Float64}, t::Vector{Float64}, h::Float64, m::Int, newton_tol::Float64, newton_max_iter::Int)
     x = copy(u_pred)
     best_norm = Inf
     best_x = x
+    best_k = 0
     for k in 1:newton_max_iter
-        evaluation = try
-            fun(x)
-        catch err
-            err isa _RETRYABLE || rethrow()
-            nothing
-        end
-        evaluation === nothing && break
-        res, jac = evaluation
+        res, jac = fun(x)
         res = Vector{Float64}(vec(res))
         jac = Matrix{Float64}(reshape(jac, m, m + 1))
         g = vcat(res, dot(t, x - base) - h)
@@ -154,6 +149,7 @@ function _arclength_corrector(fun, u_pred::Vector{Float64}, base::Vector{Float64
             stalled = k > 1 && gnorm > 0.5 * best_norm
             best_norm = gnorm
             best_x = x
+            best_k = k - 1
             stalled && break
         else
             break
@@ -174,7 +170,7 @@ function _arclength_corrector(fun, u_pred::Vector{Float64}, base::Vector{Float64
     if best_norm <= 100 * newton_tol * (1.0 + norm(best_x))
         res, jac = fun(best_x)  # the last evaluation must be at the returned point
         jac = Matrix{Float64}(reshape(jac, m, m + 1))
-        return best_x, jac, newton_max_iter
+        return best_x, jac, max(best_k, 1)
     end
     return nothing
 end
