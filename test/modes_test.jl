@@ -176,3 +176,43 @@ end
     default = ContinuousMode(:lin, linear; max_interval = 1.0)
     @test evolve(default, y0; jacobian = true).jac ≈ exp(A) atol = 1.0e-5
 end
+
+@testitem "discrete mode parameter Jacobian" setup = [Fixtures] begin
+    mode = DiscreteMode(:B, firing)
+    params = (c = -50.0, d = 2.0, unused = 1.0)
+    res = evolve(mode, [30.0, -1.0], params; parameter_jacobian = true)
+    @test res.jac_p !== nothing && size(res.jac_p) == (2, 3)
+    @test res.jac_p ≈ [1.0 0.0 0.0; 0.0 1.0 0.0]
+    @test evolve(mode, [30.0, -1.0], params).jac_p === nothing
+    @test_throws ArgumentError evolve(mode, [30.0, -1.0], Dict(:c => -50.0, :d => 2.0); parameter_jacobian = true)
+end
+
+@testitem "continuous mode parameter Jacobian matches finite differences" setup = [Fixtures] begin
+    mode = ContinuousMode(:A, izhikevich; borders = (fire,), TIGHT...)
+    res = evolve(mode, IZH_Y0_MODE, IZH_PARAMS; parameter_jacobian = true)
+    @test res.jac_p !== nothing && size(res.jac_p) == (2, 5)
+    @test res.jac !== nothing  # implied
+    h = 1.0e-6
+    for (m, key) in enumerate(keys(IZH_PARAMS))
+        up = evolve(mode, IZH_Y0_MODE, merge(IZH_PARAMS, NamedTuple{(key,)}((IZH_PARAMS[key] + h,)))).y
+        dn = evolve(mode, IZH_Y0_MODE, merge(IZH_PARAMS, NamedTuple{(key,)}((IZH_PARAMS[key] - h,)))).y
+        @test res.jac_p[:, m] ≈ (up - dn) / (2h) rtol = 1.0e-5 atol = 1.0e-6
+    end
+end
+
+@testitem "parameter Jacobian with a parametrised border" setup = [Fixtures] begin
+    # ẏ = (1, p y1) stopped at y1 = c: T(y) = (c, y2 + p (c² - y1²) / 2).
+    using StaticArrays: SVector
+    field = VectorField((y, p) -> SVector(one(y[1]), p.p * y[1]), 2)
+    stop = Border((y, p) -> y[1] - p.c, 2)
+    mode = ContinuousMode(:flow, field; borders = (stop,), TIGHT...)
+    params = (p = 0.7, c = 2.0)
+    y0 = [0.5, -1.0]
+    res = evolve(mode, y0, params; parameter_jacobian = true)
+    c, p = params.c, params.p
+    @test res.y ≈ [c, y0[2] + p * (c^2 - y0[1]^2) / 2] rtol = 1.0e-8
+    @test res.jac_p ≈ [0.0 1.0; (c^2 - y0[1]^2) / 2 p * c] rtol = 1.0e-7 atol = 1.0e-9
+    # The hitting time depends on c only through the border: without the
+    # correction term the derivative with respect to c would vanish.
+    @test res.jac_p[1, 2] ≈ 1.0 rtol = 1.0e-8
+end

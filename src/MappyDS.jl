@@ -49,8 +49,8 @@ The implementation plan and the API mapping from the Python package are in
 """
 module MappyDS
 
-using LinearAlgebra: LinearAlgebra, I, dot
-using StaticArrays: SVector, SArray
+using LinearAlgebra: LinearAlgebra, I, det, dot, norm, svd
+using StaticArrays: SVector, SMatrix, SArray
 import ForwardDiff
 import OrdinaryDiffEqTsit5
 import Printf
@@ -67,7 +67,6 @@ include("root/cycle.jl")
 include("plot_api.jl")
 
 # Milestones (see the release plan, §5):
-# 0.2.0: parameter derivatives (jac_p), arclength_continuation, trace_cycle_arclength
 # 0.3.0: mixed derivatives (hes_p), find_local_bf, trace_local_bf(_arclength), Makie extension
 # A PrecompileTools workload is deferred until the API has settled (the
 # specialisations depend on the user's function types anyway).
@@ -75,13 +74,13 @@ include("plot_api.jl")
 export MappyError, UnknownModeError, TransitionError, ModeNotTerminatedError,
     DerivativeError
 export SystemFunction, VectorField, Mapping, Border, dom_dim, cod_dim, jacobian, hessian,
-    as_state
+    parameter_jacobian, as_state
 export TrajectorySegment, Trajectory, states, dim
 export Mode, ContinuousMode, DiscreteMode, StepResult, evolve, border_names
 export AbstractMap, PoincareMap, Diffeomorphism, MapResult, end_mode, image, image_detail,
     trajectory
-export ContinuationStep, StepFunctionResult, continuation
-export CycleResult, find_cycle, trace_cycle
+export ContinuationStep, StepFunctionResult, continuation, ArclengthPoint, arclength_continuation
+export CycleResult, find_cycle, trace_cycle, trace_cycle_arclength
 export plot2d, plot_trajectory
 
 end # module

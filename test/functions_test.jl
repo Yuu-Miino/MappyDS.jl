@@ -87,3 +87,26 @@ end
     @test_throws ArgumentError as_state(ones(2, 2))
     @test_throws ArgumentError as_state("x")
 end
+
+@testitem "parameter Jacobian of a system function" setup = [Fixtures] begin
+    using StaticArrays: SVector
+    y = [0.3, -0.2]
+    jp = parameter_jacobian(henon, y, HENON_PARAMS)
+    @test jp isa Matrix{Float64}
+    @test size(jp) == (2, 2)
+    @test jp[:, 1] ≈ [-(y[1]^2), 0.0]  # d/da
+    @test jp[:, 2] ≈ [0.0, y[1]]       # d/db
+    # Parameters the function does not read give zero columns; the order is
+    # that of the NamedTuple.
+    jp3 = parameter_jacobian(henon, y, (zzz = 1.0, b = 0.3, a = 1.4))
+    @test size(jp3) == (2, 3)
+    @test all(iszero, jp3[:, 1])
+    @test jp3[:, 2] ≈ [0.0, y[1]]
+    @test jp3[:, 3] ≈ [-(y[1]^2), 0.0]
+    f = Mapping((y, _) -> SVector(y[2], -y[1]), 2)
+    @test size(parameter_jacobian(f, [1.0, 2.0])) == (2, 0)
+    @test size(parameter_jacobian(f, [1.0, 2.0], (;))) == (2, 0)
+    @test_throws ArgumentError parameter_jacobian(henon, y, Dict(:a => 1.4, :b => 0.3))
+    # Border parameters.
+    @test parameter_jacobian(Border((y, p) -> y[1] - p.c, 1), [0.5], (c = 2.0, r = 1.0)) == [-1.0 0.0]
+end

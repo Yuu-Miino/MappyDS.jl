@@ -105,3 +105,60 @@ end
     @test sn[1].y ≈ [0.5]
     @test sn[2].y ≈ [0.0] atol = 1.0e-4
 end
+
+@testitem "trace_cycle_arclength through a saddle-node fold" setup = [Fixtures] begin
+    saddle_node = Mapping((x, p) -> x[1] + p.p - x[1]^2, 1)
+    steps = trace_cycle_arclength(Diffeomorphism(saddle_node), [0.5], (p = 0.25,), :p; direction = -1, step = 0.05, step_max = 0.1, bounds = (-1.0, 0.3))
+    ps = [s.params.p for s in steps]
+    ys = [s.y[1] for s in steps]
+    @test ps ≈ ys .^ 2 atol = 1.0e-9
+    @test minimum(ps) < 0.01 && ys[end] < -0.3
+    folds = [i for (i, s) in enumerate(steps) if :fold in s.info[:events]]
+    @test length(folds) == 1
+    @test ps[folds[1] - 1] < 0.05 && ps[folds[1]] < 0.05
+    for s in steps
+        @test issubset([:eigvals, :eigvecs, :tangent, :step, :newton_iterations, :events], keys(s.info))
+        @test length(s.info[:tangent]) == 2
+    end
+    @test_throws ArgumentError trace_cycle_arclength(Diffeomorphism(saddle_node), [0.5], (p = 0.25,), :zzz)
+
+    seen = ContinuationStep[]
+    short, text = mktemp() do path, io
+        st = redirect_stderr(io) do
+            trace_cycle_arclength(Diffeomorphism(saddle_node), [0.5], (p = 0.25,), :p; direction = -1, step = 0.1, step_max = 0.1, bounds = (-1.0, 0.3), max_steps = 5, show_progress = true, callback = s -> push!(seen, s))
+        end
+        flush(io)
+        return st, read(path, String)
+    end
+    @test length(short) == 6 && length(seen) == 6
+    @test occursin("ARCLENGTH", text) && endswith(text, "\n")
+end
+
+@testitem "trace_cycle_arclength detects period doubling" setup = [Fixtures] begin
+    hmap = henon_map()
+    params = (a = 0.1, b = 0.3)
+    fp = find_cycle(hmap, [0.7, 0.2], params).y
+    steps = trace_cycle_arclength(hmap, fp, params, :a; bounds = (0.0, 1.0), step = 0.02, step_max = 0.1)
+    a_values = [s.params.a for s in steps]
+    @test a_values[1] ≈ 0.1 && a_values[end] > 0.9
+    @test all(diff(a_values) .> 0)  # no fold on this branch
+    for s in steps
+        @test image(hmap, s.y, s.params) ≈ s.y atol = 1.0e-9
+    end
+    pd = [i for (i, s) in enumerate(steps) if :period_doubling in s.info[:events]]
+    @test length(pd) == 1
+    a_pd = 3 * (1 - 0.3)^2 / 4  # exact: 0.3675
+    @test steps[pd[1] - 1].params.a < a_pd < steps[pd[1]].params.a
+    @test !any(:fold in s.info[:events] for s in steps)
+
+    pmap = make_izhikevich_map()
+    p8 = merge(IZH_PARAMS, (I = 8.0,))
+    ifp = find_cycle(pmap, [-4.6], p8).y
+    isteps = trace_cycle_arclength(pmap, ifp, p8, :I; direction = -1, bounds = (4.5, 8.0), step = 0.1, step_max = 0.5)
+    currents = [s.params.I for s in isteps]
+    @test currents[1] ≈ 8.0
+    @test all(diff(currents) .< 0) && currents[end] < 4.7
+    ipd = [i for (i, s) in enumerate(isteps) if :period_doubling in s.info[:events]]
+    @test length(ipd) == 1
+    @test isteps[ipd[1]].params.I < 4.5869 < isteps[ipd[1] - 1].params.I
+end

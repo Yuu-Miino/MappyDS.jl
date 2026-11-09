@@ -63,10 +63,12 @@ _param_keys(p) = ()
 # -- chain rule ---------------------------------------------------------------
 
 # Derivatives of `g ∘ f` given those of `f` (so far) and of the step `g`:
-# `D(g∘f) = Dg Df` and `D²(g∘f) = D²g[Df, Df] + Dg D²f`.
-function _compose(jac, hes, jac_step, hes_step)
-    jac_step === nothing && return nothing, nothing
-    jac === nothing && return jac_step, hes_step
+# `D(g∘f) = Dg Df`, `D²(g∘f) = D²g[Df, Df] + Dg D²f` and
+# `∂_p(g∘f) = Dg ∂_p f + ∂_p g`.
+function _compose(jac, hes, jac_p, jac_step, hes_step, jac_p_step)
+    jac_step === nothing && return nothing, nothing, nothing
+    jac === nothing && return jac_step, hes_step, jac_p_step
+    jac_p_new = (jac_p !== nothing && jac_p_step !== nothing) ? jac_step * jac_p + jac_p_step : nothing
     hes_new = nothing
     if hes !== nothing && hes_step !== nothing
         n_out, n_mid = size(jac_step)
@@ -84,7 +86,7 @@ function _compose(jac, hes, jac_step, hes_step)
             hes_new[i, j, k] = acc
         end
     end
-    return jac_step * jac, hes_new
+    return jac_step * jac, hes_new, jac_p_new
 end
 
 # -- PoincareMap -----------------------------------------------------------------
@@ -207,19 +209,20 @@ function _next_mode(pm::PoincareMap, mode::Mode, border)
     return rule[index]
 end
 
-function _run(pm::PoincareMap, y::Vector{Float64}, p, start::Symbol, n::Int, jacobian::Bool, hessian::Bool, trajectory::Bool)
+function _run(pm::PoincareMap, y::Vector{Float64}, p, start::Symbol, n::Int, jacobian::Bool, hessian::Bool, parameter_jacobian::Bool, trajectory::Bool)
     jac = nothing
     hes = nothing
+    jac_p = nothing
     history = Symbol[start]
     traj = Trajectory()
     current = pm.modes[start]
     for _ in 1:n
         reached = false
         for _ in 1:pm.max_transitions
-            res = evolve(current, y, p; jacobian, hessian, trajectory)
+            res = evolve(current, y, p; jacobian, hessian, parameter_jacobian, trajectory)
             y = res.y
             if jacobian
-                jac, hes = _compose(jac, hes, res.jac, res.hes)
+                jac, hes, jac_p = _compose(jac, hes, jac_p, res.jac, res.hes, res.jac_p)
             end
             res.segment === nothing || push!(traj.segments, res.segment)
             nxt = _next_mode(pm, current, res.border)
@@ -232,33 +235,37 @@ function _run(pm::PoincareMap, y::Vector{Float64}, p, start::Symbol, n::Int, jac
         end
         reached || error("no end mode reached after $(pm.max_transitions) transitions")
     end
-    return y, jac, hes, history, traj
+    return y, jac, hes, jac_p, history, traj
 end
 
 """
     image_detail(map, y0, p = nothing; n = 1, jacobian = true, hessian = false,
-                 trajectory = false, mode = nothing) -> MapResult
+                 parameter_jacobian = false, trajectory = false, mode = nothing) -> MapResult
 
 Compute the `n`-th image of `y0` under the map with derivatives. `jacobian`
 (default `true`) and `hessian` request the Jacobian matrix and the Hessian
-tensor; `trajectory` records the trajectory. For a [`PoincareMap`](@ref),
-`mode` starts the iteration in another mode than `initial_mode` (useful when
-a previous image ended in a different end mode).
+tensor; `parameter_jacobian` requests the derivative with respect to every
+parameter of the `NamedTuple` `p` (`MapResult.jac_p`, columns in the order
+of `MapResult.param_keys`; implies `jacobian`); `trajectory` records the
+trajectory. For a [`PoincareMap`](@ref), `mode` starts the iteration in
+another mode than `initial_mode` (useful when a previous image ended in a
+different end mode).
 
 Requesting derivatives integrates the variational equations together with
 the state, which changes the adaptive step sizes of the ODE solver; the
 image therefore differs slightly (on the order of the solver tolerance) from
 the one obtained with `jacobian = false`.
 """
-function image_detail(pm::PoincareMap, y0, p = nothing; n::Integer = 1, jacobian::Bool = true, hessian::Bool = false, trajectory::Bool = false, mode = nothing)
+function image_detail(pm::PoincareMap, y0, p = nothing; n::Integer = 1, jacobian::Bool = true, hessian::Bool = false, parameter_jacobian::Bool = false, trajectory::Bool = false, mode = nothing)
     n >= 1 || throw(ArgumentError("n must be at least 1, got $n"))
+    parameter_jacobian && _nparams(p)  # a NamedTuple is required
     start = mode === nothing ? pm.initial_mode : mode
     start isa Symbol || throw(ArgumentError("mode must be a Symbol, got $(repr(start))"))
     haskey(pm.modes, start) || throw(UnknownModeError(start))
     y = as_state(y0)
     length(y) == dom_dim(pm.modes[start]) || throw(ArgumentError("mode $(repr(start)) expects a state of length $(dom_dim(pm.modes[start])), got $(length(y))"))
-    y1, jac, hes, history, traj = _run(pm, y, p, start, Int(n), jacobian || hessian, hessian, trajectory)
-    return MapResult(y1; jac, hes, param_keys = _param_keys(p), mode_history = history, trajectory = trajectory ? traj : nothing)
+    y1, jac, hes, jac_p, history, traj = _run(pm, y, p, start, Int(n), jacobian || hessian || parameter_jacobian, hessian, parameter_jacobian, trajectory)
+    return MapResult(y1; jac, hes, jac_p, param_keys = _param_keys(p), mode_history = history, trajectory = trajectory ? traj : nothing)
 end
 
 """
@@ -303,6 +310,6 @@ Base.show(io::IO, d::Diffeomorphism) = print(io, "Diffeomorphism(", d.fun.name, 
 
 dim(d::Diffeomorphism) = dom_dim(d.fun)
 
-function image_detail(d::Diffeomorphism, y0, p = nothing; n::Integer = 1, jacobian::Bool = true, hessian::Bool = false, trajectory::Bool = false)
-    return image_detail(d.pmap, y0, p; n, jacobian, hessian, trajectory)
+function image_detail(d::Diffeomorphism, y0, p = nothing; n::Integer = 1, jacobian::Bool = true, hessian::Bool = false, parameter_jacobian::Bool = false, trajectory::Bool = false)
+    return image_detail(d.pmap, y0, p; n, jacobian, hessian, parameter_jacobian, trajectory)
 end

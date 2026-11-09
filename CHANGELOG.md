@@ -8,6 +8,27 @@ as interpreted by Julia's Pkg (in `0.x`, a minor bump is breaking).
 
 ## [Unreleased]
 
+Parameter derivatives of the Poincaré map and pseudo-arclength
+continuation (the features of `mappy-ds` 0.2.0).
+
+### Added
+
+- Derivatives with respect to the parameters: `parameter_jacobian(f, y, p)`
+  for system functions (ForwardDiff over the values of the `NamedTuple`
+  `p`), `evolve(...; parameter_jacobian = true)` returning
+  `StepResult.jac_p` from the sensitivity equations of continuous modes with
+  the border correction (including borders that depend on parameters), and
+  `image_detail(...; parameter_jacobian = true)` returning
+  `MapResult.jac_p` (columns ordered as `MapResult.param_keys`) through the
+  chain rule across modes.
+- Pseudo-arclength continuation: `arclength_continuation` (generic
+  predictor–corrector on a bordered system, adaptive step, fold passing,
+  closed-curve detection) returning `ArclengthPoint`s, and
+  `trace_cycle_arclength`, which follows a branch of periodic points through
+  folds using `jac` and `jac_p` for the tangent and flags `:fold`,
+  `:branch_point`, `:period_doubling` and `:neimark_sacker` events from sign
+  changes between consecutive points.
+
 ## [0.1.0] - 2026-11-08
 
 Port of `mappy-ds` 0.1.0 (the mode concept and the numerics of Miino,

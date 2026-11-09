@@ -84,3 +84,70 @@ end
     end
     @test quiet == ""
 end
+
+@testitem "arclength continuation on the unit circle" begin
+    using LinearAlgebra
+    circle(u) = ([dot(u, u) - 1.0], permutedims(2u))
+    pts = arclength_continuation(circle, [1.0, 0.0]; step = 0.3, step_max = 0.3)
+    @test 15 < length(pts) < 40
+    for p in pts
+        @test abs(dot(p.u, p.u) - 1.0) < 1.0e-9
+        @test abs(norm(p.tangent) - 1.0) < 1.0e-12
+        @test abs(dot(p.tangent, p.u)) < 1.0e-8
+    end
+    @test pts[2].u[2] > 0  # direction = +1: the last component increases first
+    signs = [sign(p.tangent[2]) for p in pts]
+    @test count(signs[2:end] .!= signs[1:(end - 1)]) == 2  # two folds
+    @test norm(pts[end].u - pts[1].u) < 0.5  # closed on itself
+
+    down = arclength_continuation(circle, [1.0, 0.0]; step = 0.1, step_max = 0.1, direction = -1, bounds = (-0.5, 1.0))
+    @test down[2].u[2] < 0
+    @test all(p.u[2] >= -0.5 for p in down)
+    @test down[end].u[2] < -0.3
+
+    start = arclength_continuation(circle, [0.7, 0.3]; step = 0.1, max_steps = 0)
+    @test length(start) == 1
+    @test start[1].u[2] ≈ 0.3
+    @test start[1].u[1] ≈ sqrt(1 - 0.09)
+    @test start[1].step == 0.0
+
+    seen = ArclengthPoint[]
+    cb = arclength_continuation(circle, [1.0, 0.0]; step = 0.3, step_max = 0.3, callback = p -> push!(seen, p))
+    @test length(seen) == length(cb)
+    @test all(a === b for (a, b) in zip(seen, cb))
+
+    @test_throws ArgumentError arclength_continuation(circle, [1.0]; step = 0.1)
+    @test_throws ArgumentError arclength_continuation(circle, [1.0, 0.0]; direction = 2)
+    @test_throws ArgumentError arclength_continuation(circle, [1.0, 0.0]; step = 1.0, step_max = 0.1)
+    nowhere(u) = ([dot(u, u) + 1.0], permutedims(2u))
+    @test_throws "starting point" arclength_continuation(nowhere, [1.0, 0.0])
+end
+
+@testitem "arclength continuation passes a fold and retries failed steps" begin
+    using LinearAlgebra
+    # Fixed points of y -> y + p - y²: the curve p = y² folds at (0, 0).
+    system(u) = ([u[2] - u[1] * u[1]], [-2.0 * u[1] 1.0])
+    pts = arclength_continuation(system, [0.5, 0.25]; step = 0.05, step_max = 0.1, direction = -1, bounds = (-1, 0.3))
+    ys = [p.u[1] for p in pts]
+    ps = [p.u[2] for p in pts]
+    @test ps ≈ ys .^ 2 atol = 1.0e-9
+    @test minimum(ps) < 0.01
+    @test ys[end] < -0.3 && ps[end] > 0.1
+
+    circle(u) = ([dot(u, u) - 1.0], permutedims(2u))
+    calls = Ref(0)
+    function flaky(u)
+        calls[] += 1
+        if u[2] > 0.6 && calls[] % 7 == 0
+            throw(SingularException(1))
+        end
+        return circle(u)
+    end
+    fpts = arclength_continuation(flaky, [1.0, 0.0]; step = 0.05, step_min = 1.0e-4, step_max = 0.4, bounds = (-2, 0.9))
+    steps = [p.step for p in fpts[2:end]]
+    @test maximum(steps) > 0.05
+    @test minimum(steps) > 0
+    for p in fpts
+        @test abs(dot(p.u, p.u) - 1.0) < 1.0e-9
+    end
+end

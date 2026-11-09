@@ -119,40 +119,46 @@ border_names(m::ContinuousMode) = map(b -> b.name, m.borders)
 # -- evolve -------------------------------------------------------------------
 
 """
-    evolve(mode, y0, p = nothing; jacobian = false, hessian = false, trajectory = false) -> StepResult
+    evolve(mode, y0, p = nothing; jacobian = false, hessian = false,
+           parameter_jacobian = false, trajectory = false) -> StepResult
 
 Evolve the state `y0` through the mode (Python: `Mode.step`). `jacobian`
 and `hessian` request the Jacobian matrix and the Hessian tensor of the mode
-map (`hessian` implies `jacobian`); `trajectory` records the trajectory
-within the mode if the mode is `in_trajectory`.
+map (`hessian` implies `jacobian`); `parameter_jacobian` requests the
+derivative with respect to the parameters (`p` must then be a `NamedTuple`;
+one column per key, in order); `trajectory` records the trajectory within
+the mode if the mode is `in_trajectory`.
 """
 function evolve end
 
-function evolve(mode::DiscreteMode, y0, p = nothing; jacobian::Bool = false, hessian::Bool = false, trajectory::Bool = false)
+function evolve(mode::DiscreteMode, y0, p = nothing; jacobian::Bool = false, hessian::Bool = false, parameter_jacobian::Bool = false, trajectory::Bool = false)
     fun = mode.fun
     y = _svec(fun, y0)
     y1 = _eval(fun, y, p)
     jac = (jacobian || hessian) ? Matrix(_jac(fun, y, p)) : nothing
     hes = hessian ? Array(_hes(fun, y, p)) : nothing
+    jac_p = parameter_jacobian ? Matrix(_jac_p(fun, y, p)) : nothing
     segment = nothing
     if trajectory && mode.in_trajectory && dom_dim(fun) == cod_dim(fun)
         segment = TrajectorySegment(mode.name, :discrete, hcat(Vector(y), Vector(y1)))
     end
-    return StepResult(Vector(y1); jac, hes, segment)
+    return StepResult(Vector(y1); jac, hes, jac_p, segment)
 end
 
-function evolve(mode::ContinuousMode{<:VectorField{N}}, y0, p = nothing; jacobian::Bool = false, hessian::Bool = false, trajectory::Bool = false) where {N}
+function evolve(mode::ContinuousMode{<:VectorField{N}}, y0, p = nothing; jacobian::Bool = false, hessian::Bool = false, parameter_jacobian::Bool = false, trajectory::Bool = false) where {N}
     y = as_state(y0)
     length(y) == N || throw(ArgumentError("expected a state of length $N, got $(length(y))"))
-    jacobian = jacobian || hessian
+    jacobian = jacobian || hessian || parameter_jacobian
+    K = parameter_jacobian ? _nparams(p) : 0
     z0 = copy(y)
     jacobian && append!(z0, vec(Matrix{Float64}(I, N, N)))
+    parameter_jacobian && append!(z0, zeros(N * K))
     hessian && append!(z0, zeros(N^3))
 
     fired = Ref(0)
     callbacks = _callbacks(mode, p, fired)
     record = trajectory && mode.in_trajectory
-    prob = SciMLBase.ODEProblem(_rhs(mode, p, jacobian, hessian), z0, (0.0, mode.max_interval))
+    prob = SciMLBase.ODEProblem(_rhs(mode, p, jacobian, hessian, parameter_jacobian, K), z0, (0.0, mode.max_interval))
     sol = SciMLBase.solve(
         prob, mode.alg;
         reltol = mode.reltol, abstol = mode.abstol, callback = callbacks,
@@ -176,14 +182,20 @@ function evolve(mode::ContinuousMode{<:VectorField{N}}, y0, p = nothing; jacobia
     y1 = z1[1:N]
     jac = nothing
     hes = nothing
+    jac_p = nothing
     if jacobian
-        jac = reshape(z1[(N + 1):(N + N * N)], N, N)
+        off = N
+        jac = reshape(z1[(off + 1):(off + N * N)], N, N)
+        off += N * N
+        if parameter_jacobian
+            jac_p = reshape(z1[(off + 1):(off + N * K)], N, K)
+            off += N * K
+        end
         if hessian
-            off = N + N * N
             hes = reshape(z1[(off + 1):(off + N^3)], N, N, N)
         end
         if border !== nothing
-            jac, hes = _border_correction(mode, _head(Val(N), y1), p, mode.borders[border], jac, hes)
+            jac, hes, jac_p = _border_correction(mode, _head(Val(N), y1), p, mode.borders[border], jac, hes, jac_p)
         end
     end
 
@@ -204,13 +216,15 @@ function evolve(mode::ContinuousMode{<:VectorField{N}}, y0, p = nothing; jacobia
         segment = TrajectorySegment(mode.name, :continuous, Y, ts)
     end
 
-    return StepResult(y1; jac, hes, border, t = t1, segment)
+    return StepResult(y1; jac, hes, jac_p, border, t = t1, segment)
 end
 
 # Right-hand side of the state augmented with the variational systems. Layout
-# of the augmented state: y (N), then J (N²) if `jacobian`, then H (N³) if
-# `hessian`.
-function _rhs(mode::ContinuousMode{<:VectorField{N}}, p, jacobian::Bool, hessian::Bool) where {N}
+# of the augmented state: y (N), then J (N²) if `jacobian`, then P (N·K) if
+# `parameter_jacobian`, then H (N³) if `hessian`:
+#
+#   J' = Df J,   P' = Df P + ∂f/∂p,   H'_{ijk} = Σ (D²f)_{ilm} J_{lj} J_{mk} + Σ (Df)_{il} H_{ljk}.
+function _rhs(mode::ContinuousMode{<:VectorField{N}}, p, jacobian::Bool, hessian::Bool, parameter_jacobian::Bool, K::Int) where {N}
     fun = mode.fun
     return function (dz, z, _, t)
         y = _head(Val(N), z)
@@ -229,9 +243,22 @@ function _rhs(mode::ContinuousMode{<:VectorField{N}}, p, jacobian::Bool, hessian
                 end
                 dJ[i, j] = s
             end
+            off = N + N * N
+            if parameter_jacobian
+                fp = _jac_p(fun, y, p)
+                P = reshape(view(z, (off + 1):(off + N * K)), N, K)
+                dP = reshape(view(dz, (off + 1):(off + N * K)), N, K)
+                @inbounds for m in 1:K, i in 1:N
+                    s = fp[i, m]
+                    for l in 1:N
+                        s += Df[i, l] * P[l, m]
+                    end
+                    dP[i, m] = s
+                end
+                off += N * K
+            end
             if hessian
                 D2f = _hes(fun, y, p)
-                off = N + N * N
                 H = reshape(view(z, (off + 1):(off + N^3)), N, N, N)
                 dH = reshape(view(dz, (off + 1):(off + N^3)), N, N, N)
                 @inbounds for k in 1:N, j in 1:N, i in 1:N
@@ -279,7 +306,10 @@ end
 # The Hessian follows by differentiating once more with respect to `y0`,
 # taking `∂τ/∂y0 = -(∇q J) / (∇q · f)` into account; every quantity evaluated
 # at the hitting point depends on `y0` through the mode Jacobian `B J`.
-function _border_correction(mode::ContinuousMode, y1::SVector{N}, p, b::Border, Jflow::Matrix{Float64}, Hflow::Union{Nothing, Array{Float64, 3}}) where {N}
+#
+# The parameter derivative of the mode map is `B P + G` with
+# `G = -f ⊗ ∂q/∂p / (∇q · f)` (the border may depend on the parameters).
+function _border_correction(mode::ContinuousMode, y1::SVector{N}, p, b::Border, Jflow::Matrix{Float64}, Hflow::Union{Nothing, Array{Float64, 3}}, Pflow::Union{Nothing, Matrix{Float64}}) where {N}
     fun = mode.fun
     f = _eval(fun, y1, p)
     q = _jac(b, y1, p)[1, :]
@@ -290,7 +320,15 @@ function _border_correction(mode::ContinuousMode, y1::SVector{N}, p, b::Border, 
         B[a, d] -= f[a] * q[d] / s
     end
     jac = B * Jflow
-    Hflow === nothing && return jac, nothing
+    jac_p = nothing
+    if Pflow !== nothing
+        qp = _jac_p(b, y1, p)
+        jac_p = B * Pflow
+        for m in 1:size(jac_p, 2), a in 1:N
+            jac_p[a, m] -= f[a] * qp[1, m] / s
+        end
+    end
+    Hflow === nothing && return jac, nothing, jac_p
 
     Df = _jac(fun, y1, p)
     Hq = _hes(b, y1, p)
@@ -327,5 +365,5 @@ function _border_correction(mode::ContinuousMode, y1::SVector{N}, p, b::Border, 
         end
         hes[a, bb, c] = acc
     end
-    return jac, hes
+    return jac, hes, jac_p
 end

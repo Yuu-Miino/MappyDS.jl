@@ -172,6 +172,22 @@ end
     return SArray{Tuple{M, N, N}, eltype(h)}(Tuple(h))
 end
 
+# -- parameter derivatives (hot path) -------------------------------------------
+
+_nparams(::Nothing) = 0
+_nparams(::NamedTuple{K}) where {K} = length(K)
+_nparams(p) = throw(ArgumentError("parameter derivatives require the parameters as a NamedTuple of real numbers, got $(typeof(p))"))
+
+# `∂f/∂p` as a `cod_dim × k` static matrix, columns in the order of `keys(p)`.
+@inline function _jac_p(f::SystemFunction, y::SVector, p::NamedTuple{K}) where {K}
+    M = cod_dim(f)
+    length(K) == 0 && return zeros(SMatrix{M, 0, Float64})
+    pv = SVector{length(K), Float64}(values(p))
+    return ForwardDiff.jacobian(pp -> _eval(f, y, NamedTuple{K}(Tuple(pp))), pv)
+end
+_jac_p(f::SystemFunction, ::SVector, ::Nothing) = zeros(SMatrix{cod_dim(f), 0, Float64})
+_jac_p(::SystemFunction, ::SVector, p) = _nparams(p)
+
 # -- public evaluation --------------------------------------------------------
 
 """
@@ -195,3 +211,13 @@ Hessian tensor `hes[i, j, k] = ∂²f_i/(∂y_j ∂y_k)` at `y`, computed with
 nested ForwardDiff Jacobians.
 """
 hessian(f::SystemFunction, y, p = nothing) = Array(_hes(f, _svec(f, y), p))
+
+"""
+    parameter_jacobian(f::SystemFunction, y, p) -> Matrix{Float64}
+
+Derivative `jac_p[i, m] = ∂f_i/∂p_m` at `y` with respect to the parameters,
+one column per key of the `NamedTuple` `p` in its order (a `cod_dim × 0`
+matrix when `p` is `nothing` or empty). Parameters the function does not
+read give zero columns.
+"""
+parameter_jacobian(f::SystemFunction, y, p = nothing) = Matrix(_jac_p(f, _svec(f, y), p))

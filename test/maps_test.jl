@@ -296,3 +296,40 @@ end
     @test loop.max_transitions == 10
     @test_throws "10 transitions" image(loop, [1.0])
 end
+
+@testitem "parameter Jacobian of maps" setup = [Fixtures] begin
+    using StaticArrays: SVector
+    # Border parameters take part: T(y0) = c - c + r = r.
+    field = VectorField((y, p) -> SVector(p.v + zero(y[1])), 1)
+    stop = Border((y, p) -> y[1] - p.c, 1)
+    reset = Mapping((y, p) -> y[1] - p.c + p.r, 1)
+    pmap = PoincareMap([ContinuousMode(:flow, field; borders = (stop,)), DiscreteMode(:reset, reset)], Dict(:flow => :reset, :reset => :flow), :flow)
+    res = image_detail(pmap, 0.0, (v = 2.0, c = 1.0, r = 0.25); parameter_jacobian = true)
+    @test res.y ≈ [0.25] atol = 1.0e-9
+    @test res.jac_p ≈ [0.0 0.0 1.0] atol = 1.0e-8
+    @test res.param_keys == (:v, :c, :r)
+
+    function fd_param(m, y0, params; n = 1, h = 1.0e-6)
+        cols = map(keys(params)) do k
+            up = image(m, y0, merge(params, NamedTuple{(k,)}((params[k] + h,))); n)
+            dn = image(m, y0, merge(params, NamedTuple{(k,)}((params[k] - h,))); n)
+            return (up - dn) / (2h)
+        end
+        return reduce(hcat, cols)
+    end
+    hmap = henon_map()
+    y0 = [0.1, 0.2]
+    hres = image_detail(hmap, y0, HENON_PARAMS; n = 3, parameter_jacobian = true)
+    @test hres.jac !== nothing && size(hres.jac_p) == (2, 2)
+    @test hres.jac_p ≈ fd_param(hmap, y0, HENON_PARAMS; n = 3) rtol = 1.0e-6 atol = 1.0e-8
+    plain = image_detail(hmap, y0, HENON_PARAMS)
+    @test plain.jac_p === nothing
+    implied = image_detail(hmap, y0, HENON_PARAMS; jacobian = false, parameter_jacobian = true)
+    @test implied.jac !== nothing && implied.jac_p !== nothing
+    @test_throws ArgumentError image_detail(hmap, y0, Dict(:a => 1.4, :b => 0.3); parameter_jacobian = true)
+
+    izh = make_izhikevich_map(; TIGHT...)
+    ires = image_detail(izh, -3.0, IZH_PARAMS; n = 2, parameter_jacobian = true)
+    @test size(ires.jac_p) == (1, 5)
+    @test ires.jac_p ≈ fd_param(izh, -3.0, IZH_PARAMS; n = 2) rtol = 1.0e-5 atol = 1.0e-6
+end

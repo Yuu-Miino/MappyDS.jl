@@ -57,6 +57,24 @@ Integrating the variational equations changes the adaptive step sizes of
 the solver, so the image computed with derivatives differs from the one
 computed without by an amount of the order of the solver tolerance.
 
+## Parameter derivatives
+
+With `parameter_jacobian = true`, [`evolve`](@ref) and
+[`image_detail`](@ref) also return `jac_p[i, m] = ∂y_i/∂p_m`, one column per
+key of the parameter `NamedTuple` in its order (`MapResult.param_keys`).
+For a system function, [`parameter_jacobian`](@ref) gives ``∂f/∂p`` by
+ForwardDiff over the parameter values. For a continuous mode the
+sensitivity equations
+
+```math
+\dot P = Df(\varphi)\, P + \partial_p f(\varphi), \qquad P(0) = 0,
+```
+
+are integrated with the state, and the border correction becomes
+``B P + G`` with ``G = -f \otimes \partial_p q / s``, so borders that depend
+on the parameters are handled. Across modes the chain rule reads
+``\partial_p (g \circ f) = Dg\, \partial_p f + \partial_p g``.
+
 ## Checking derivatives
 
 Finite differences are a convenient check:

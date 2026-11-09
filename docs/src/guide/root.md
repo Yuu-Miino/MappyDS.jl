@@ -47,5 +47,27 @@ fails, so the returned vector may be shorter than `resolution`.
 
 The generic driver [`continuation`](@ref) sweeps a parameter for any step
 function returning a [`StepFunctionResult`](@ref); `trace_cycle` is built on
-it. Pseudo-arclength continuation (through folds) and the continuation of
-bifurcation points arrive in MappyDS 0.2 and 0.3.
+it.
+
+## Pseudo-arclength continuation
+
+Natural-parameter continuation fails at a fold, where the branch turns back
+in the parameter. [`trace_cycle_arclength`](@ref) treats the periodic point
+and the parameter together as a point ``u = (y, λ)`` on the curve
+``T^n(y, λ) - y = 0`` and advances along the curve itself (Keller's
+pseudo-arclength method), using the analytic tangent from `jac` and `jac_p`:
+
+```julia
+f = Mapping((y, p) -> y[1] + p.p - y[1]^2, 1)   # fixed points ±√p, fold at p = 0
+steps = trace_cycle_arclength(Diffeomorphism(f), [0.5], (p = 0.25,), :p;
+    direction = -1, step = 0.05, step_max = 0.1, bounds = (-1.0, 0.25))
+[(s.params.p, s.y[1], s.info[:events]) for s in steps]
+```
+
+Between consecutive points the sign changes of ``\det(DT^n - I)``,
+``\det(DT^n + I)`` and of the number of multipliers outside the unit circle
+flag `:fold`, `:branch_point`, `:period_doubling` and `:neimark_sacker`
+events in `info[:events]`; the continuation of the bifurcation points
+themselves arrives in MappyDS 0.3. The generic algorithm is
+[`arclength_continuation`](@ref), which follows the zero set of any
+``F : \mathbb{R}^{m+1} \to \mathbb{R}^m`` given `fun(u) -> (F, J)`.
