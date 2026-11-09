@@ -121,10 +121,11 @@ end
     expected[1, 1, 1] = -2 * y[1]  # ∂²f_1/∂x∂a
     expected[2, 1, 2] = 1.0        # ∂²f_2/∂x∂b
     @test hp ≈ expected
-    out = mixed_hessian(henon, y, (zzz = 1.0, b = 0.3))
-    @test size(out) == (2, 2, 2)
+    out = mixed_hessian(henon, y, (zzz = 1.0, b = 0.3, a = 1.4))
+    @test size(out) == (2, 2, 3)
     @test all(iszero, out[:, :, 1])
     @test out[2, 1, 2] ≈ 1.0
+    @test out[1, 1, 3] ≈ -2 * y[1]
     f = Mapping((y, _) -> SVector(y[2], -y[1]), 2)
     @test size(mixed_hessian(f, [1.0, 2.0])) == (2, 2, 0)
 end

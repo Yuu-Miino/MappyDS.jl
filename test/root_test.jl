@@ -188,7 +188,9 @@ end
     @test angle(cis(sres.theta)) ≈ 0.0 atol = 1.0e-6
     @test sres.eigvals ≈ [1.0] atol = 1.0e-6
 
-    pmap = make_izhikevich_map()
+    # The bifurcation system is solved to 1e-10, below the noise floor of the
+    # default ODE tolerances, so use a tighter integrator here.
+    pmap = make_izhikevich_map(; reltol = 1.0e-8, abstol = 1.0e-10)
     p8 = merge(IZH_PARAMS, (I = 8.0,))
     trace = trace_cycle(pmap, find_cycle(pmap, [-4.6], p8).y, p8, :I, 4.5; resolution = 10)
     mu = [real(s.info[:eigvals][1]) for s in trace]
@@ -229,7 +231,9 @@ end
     fp = find_cycle(hmap, [0.5, 0.15], params).y
     check_system_jacobian(hmap, vcat(fp, params.a, pi), params, :a; rtol = 1.0e-6, atol = 1.0e-8)
 
-    pmap = make_izhikevich_map()
+    # The bifurcation system is solved to 1e-10, below the noise floor of the
+    # default ODE tolerances, so use a tighter integrator here.
+    pmap = make_izhikevich_map(; reltol = 1.0e-8, abstol = 1.0e-10)
     p8 = merge(IZH_PARAMS, (I = 8.0,))
     trace = trace_cycle(pmap, find_cycle(pmap, [-4.6], p8).y, p8, :I, 4.5; resolution = 10)
     mu = [real(s.info[:eigvals][1]) for s in trace]
