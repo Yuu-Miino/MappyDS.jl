@@ -116,7 +116,7 @@ function _tangent(jac::AbstractMatrix, previous, direction::Int)
         bordered = vcat(jac, permutedims(previous))
         rhs = zeros(m + 1)
         rhs[end] = 1.0
-        t = bordered \\ rhs
+        t = bordered \ rhs
     else
         t = svd(jac; full = true).Vt[end, :]
         if t[end] * direction < 0
@@ -136,7 +136,7 @@ function _arclength_corrector(fun, u_pred::Vector{Float64}, base::Vector{Float64
         jac = Matrix{Float64}(reshape(jac, m, m + 1))
         g = vcat(res, dot(t, x - base) - h)
         bordered = vcat(jac, permutedims(t))
-        dx = bordered \\ (-g)
+        dx = bordered \ (-g)
         x = x + dx
         if norm(dx) <= newton_tol * (1.0 + norm(x))
             res, jac = fun(x)
