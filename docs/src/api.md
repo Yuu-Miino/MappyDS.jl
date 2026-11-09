@@ -40,7 +40,7 @@ Pages = ["trajectory.jl"]
 
 ```@autodocs
 Modules = [MappyDS]
-Pages = ["root/cycle.jl", "continuation.jl"]
+Pages = ["root/cycle.jl", "root/local_bf.jl", "continuation.jl"]
 ```
 
 ## Plotting

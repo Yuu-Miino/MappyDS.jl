@@ -188,6 +188,17 @@ end
 _jac_p(f::SystemFunction, ::SVector, ::Nothing) = zeros(SMatrix{cod_dim(f), 0, Float64})
 _jac_p(::SystemFunction, ::SVector, p) = _nparams(p)
 
+# `∂²f/∂y∂p` as a `cod_dim × dom_dim × k` static array (nested ForwardDiff).
+@inline function _hes_p(f::SystemFunction, y::SVector{N}, p::NamedTuple{K}) where {N, K}
+    M = cod_dim(f)
+    length(K) == 0 && return zeros(SArray{Tuple{M, N, 0}, Float64})
+    pv = SVector{length(K), Float64}(values(p))
+    h = ForwardDiff.jacobian(pp -> vec(_jac(f, y, NamedTuple{K}(Tuple(pp)))), pv)
+    return SArray{Tuple{M, N, length(K)}, eltype(h)}(Tuple(h))
+end
+_hes_p(f::SystemFunction, ::SVector{N}, ::Nothing) where {N} = zeros(SArray{Tuple{cod_dim(f), N, 0}, Float64})
+_hes_p(::SystemFunction, ::SVector, p) = _nparams(p)
+
 # -- public evaluation --------------------------------------------------------
 
 """
@@ -221,3 +232,11 @@ matrix when `p` is `nothing` or empty). Parameters the function does not
 read give zero columns.
 """
 parameter_jacobian(f::SystemFunction, y, p = nothing) = Matrix(_jac_p(f, _svec(f, y), p))
+
+"""
+    mixed_hessian(f::SystemFunction, y, p) -> Array{Float64, 3}
+
+Mixed second derivative `hes_p[i, j, m] = ∂²f_i/(∂y_j ∂p_m)` at `y`, the
+last axis in the order of the keys of the `NamedTuple` `p`.
+"""
+mixed_hessian(f::SystemFunction, y, p = nothing) = Array(_hes_p(f, _svec(f, y), p))
