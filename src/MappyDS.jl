@@ -68,7 +68,6 @@ include("root/local_bf.jl")
 include("plot_api.jl")
 
 # Milestones (see the release plan, §5):
-# 0.3.0: Makie extension (plot2d, plot_trajectory)
 # A PrecompileTools workload is deferred until the API has settled (the
 # specialisations depend on the user's function types anyway).
 
@@ -83,6 +82,6 @@ export AbstractMap, PoincareMap, Diffeomorphism, MapResult, end_mode, image, ima
 export ContinuationStep, StepFunctionResult, continuation, ArclengthPoint, arclength_continuation
 export CycleResult, find_cycle, trace_cycle, trace_cycle_arclength
 export LocalBfResult, find_local_bf, trace_local_bf, trace_local_bf_arclength
-export plot2d, plot_trajectory
+export PlotConfig, LineStyle, plot2d, plot_trajectory
 
 end # module

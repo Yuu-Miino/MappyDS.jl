@@ -27,6 +27,7 @@ makedocs(;
             "guide/modes.md",
             "guide/derivatives.md",
             "guide/root.md",
+            "guide/plotting.md",
         ],
         "API reference" => "api.md",
         "Python package" => "python.md",

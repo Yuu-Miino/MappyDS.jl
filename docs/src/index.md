@@ -95,6 +95,6 @@ autonomous by adding time as a state and resetting it on a section.
 ## Contents
 
 ```@contents
-Pages = ["guide/modes.md", "guide/derivatives.md", "guide/root.md", "api.md", "python.md"]
+Pages = ["guide/modes.md", "guide/derivatives.md", "guide/root.md", "guide/plotting.md", "api.md", "python.md"]
 Depth = 1
 ```

@@ -30,6 +30,12 @@ Mixed derivatives and local bifurcation analysis (the features of
   passing cusps and flagging `:fold`, the strong resonances
   `:resonance_1_1` … `:resonance_1_4` on Neimark–Sacker curves and
   `:second_multiplier_crossing`).
+- Plotting through the package extension `MappyDSMakieExt` (loaded with a
+  Makie backend): `plot_trajectory` draws a `Trajectory` onto an `Axis`, and
+  `plot2d(map, y0, p, config::PlotConfig)` iterates a map and draws its orbit,
+  interactively (GLMakie: click to restart, `f` toggles trajectories,
+  space clears, `p` and up/down change a parameter) or for a fixed number of
+  `frames`; `PlotConfig` and `LineStyle` configure it.
 
 ## [0.2.0] - 2026-11-09
 
