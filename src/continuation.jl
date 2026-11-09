@@ -127,7 +127,10 @@ function _tangent(jac::AbstractMatrix, previous, direction::Int)
 end
 
 # Newton on the bordered system; `nothing` if it does not converge. The last
-# evaluation of `fun` is at the returned point.
+# evaluation of `fun` is at the returned point. Convergence is declared when
+# the Newton update is small, or when the residual itself is already below
+# the tolerance (maps built on ODE solves have a noise floor that can keep
+# the update from shrinking further).
 function _arclength_corrector(fun, u_pred::Vector{Float64}, base::Vector{Float64}, t::Vector{Float64}, h::Float64, m::Int, newton_tol::Float64, newton_max_iter::Int)
     x = copy(u_pred)
     for k in 1:newton_max_iter
@@ -135,6 +138,9 @@ function _arclength_corrector(fun, u_pred::Vector{Float64}, base::Vector{Float64
         res = Vector{Float64}(vec(res))
         jac = Matrix{Float64}(reshape(jac, m, m + 1))
         g = vcat(res, dot(t, x - base) - h)
+        if k > 1 && norm(g) <= 100 * newton_tol * (1.0 + norm(x))
+            return x, jac, k - 1
+        end
         bordered = vcat(jac, permutedims(t))
         dx = bordered \ (-g)
         x = x + dx

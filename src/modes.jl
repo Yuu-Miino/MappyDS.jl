@@ -133,6 +133,7 @@ function evolve end
 
 function evolve(mode::DiscreteMode, y0, p = nothing; jacobian::Bool = false, hessian::Bool = false, parameter_jacobian::Bool = false, trajectory::Bool = false)
     fun = mode.fun
+    parameter_jacobian && _nparams(p)  # a NamedTuple is required
     y = _svec(fun, y0)
     y1 = _eval(fun, y, p)
     jac = (jacobian || hessian) ? Matrix(_jac(fun, y, p)) : nothing

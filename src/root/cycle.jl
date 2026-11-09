@@ -132,6 +132,7 @@ end
     trace_cycle_arclength(map, y0, params::NamedTuple, param_key::Symbol;
                           period = 1, direction = 1, bounds = nothing,
                           step = 0.01, step_min = 1e-6, step_max = 0.1, max_steps = 1000,
+                          newton_tol = 1e-10, newton_max_iter = 10,
                           show_progress = false, callback = nothing) -> Vector{ContinuationStep}
 
 Follow a branch of periodic points by pseudo-arclength continuation.
@@ -156,7 +157,7 @@ consecutive points and recorded in `info[:events]` of the later point:
 
 `direction` (`+1`: ``λ`` increasing first) and `bounds` (`(lo, hi)` on ``λ``)
 work as in [`arclength_continuation`](@ref), as do `step`, `step_min`,
-`step_max` and `max_steps`. Each step's `info` holds `:eigvals`, `:eigvecs`,
+`step_max`, `max_steps`, `newton_tol` and `newton_max_iter`. Each step's `info` holds `:eigvals`, `:eigvecs`,
 `:tangent` (unit vector in the ``(y, λ)`` space), `:step`,
 `:newton_iterations` and `:events`.
 
@@ -177,6 +178,7 @@ function trace_cycle_arclength(
         map::AbstractMap, y0, params::NamedTuple, param_key::Symbol;
         period::Integer = 1, direction::Integer = 1, bounds = nothing,
         step::Real = 0.01, step_min::Real = 1.0e-6, step_max::Real = 0.1, max_steps::Integer = 1000,
+        newton_tol::Real = 1.0e-10, newton_max_iter::Integer = 10,
         show_progress::Bool = false, callback = nothing,
     )
     haskey(params, param_key) || throw(ArgumentError("the map does not depend on parameter $(repr(param_key)): it is not among the parameters $(keys(params))"))
@@ -223,7 +225,7 @@ function trace_cycle_arclength(
     try
         arclength_continuation(
             system, vcat(y, Float64(params[param_key]));
-            step, step_min, step_max, max_steps, direction, bounds, callback = on_point,
+            step, step_min, step_max, max_steps, direction, bounds, newton_tol, newton_max_iter, callback = on_point,
         )
     finally
         show_progress && println(stderr)
