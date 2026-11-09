@@ -2,8 +2,18 @@ using MappyDS
 using Documenter
 using DocumenterCitations
 using DocumenterInterLinks
+using Literate
 
 DocMeta.setdocmeta!(MappyDS, :DocTestSetup, :(using MappyDS); recursive = true)
+
+# The worked examples are Literate.jl scripts in examples/; they are converted
+# to Markdown pages with executable `@example` blocks (CairoMakie figures).
+const EXAMPLES = ["henon", "logistic_3d", "izhikevich", "duffing", "forced_alpazur"]
+const EXAMPLE_DIR = joinpath(@__DIR__, "src", "examples")
+mkpath(EXAMPLE_DIR)
+for name in EXAMPLES
+    Literate.markdown(joinpath(@__DIR__, "..", "examples", "$name.jl"), EXAMPLE_DIR; documenter = true)
+end
 
 # Cross-references to the Python documentation (Sphinx objects.inv), e.g.
 # [`PoincareMap`](@extref mappy mappy_ds.PoincareMap).
@@ -29,6 +39,7 @@ makedocs(;
             "guide/root.md",
             "guide/plotting.md",
         ],
+        "Working examples" => ["examples.md"; ["examples/$name.md" for name in EXAMPLES]],
         "API reference" => "api.md",
         "Python package" => "python.md",
         "References" => "references.md",

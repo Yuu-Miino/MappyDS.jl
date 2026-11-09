@@ -85,6 +85,14 @@ fp.y, fp.eigvals  # ≈ [-4.64542], [0.22196 + 0.0im]
 branch = trace_cycle(pmap, fp.y, merge(params, (I = 8.0,)), :I, 4.5; resolution = 50)
 ```
 
+## Examples
+
+`examples/` holds Literate.jl scripts for the Hénon map, three coupled
+logistic maps, the Izhikevich neuron, the forced Duffing oscillator and the
+forced Alpazur oscillator; they are rendered with their output in the
+[Working examples](https://yuu-miino.github.io/doc.mappy/julia/stable/examples/)
+section of the documentation.
+
 ## Features
 
 - **Modes**: `ContinuousMode` (an ODE integrated with OrdinaryDiffEq until a
