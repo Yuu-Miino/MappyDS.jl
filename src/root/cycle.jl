@@ -201,11 +201,13 @@ function trace_cycle_arclength(
     on_point = function (point::ArclengthPoint)
         # `system` was last evaluated at the accepted point by the corrector.
         res = last[]
+        res === nothing && error("the continuation accepted a point before evaluating the map")
+        jac = res.jac::Matrix{Float64}
         eig = LinearAlgebra.eigvals(res)
         eigvec = LinearAlgebra.eigvecs(res)
-        events = isempty(steps) ? Symbol[] : _classify_events(prev_tangent[], point.tangent, prev_jac[], res.jac, prev_eig[], eig)
+        events = isempty(steps) ? Symbol[] : _classify_events(prev_tangent[], point.tangent, prev_jac[], jac, prev_eig[], eig)
         prev_tangent[] = point.tangent
-        prev_jac[] = res.jac
+        prev_jac[] = jac
         prev_eig[] = eig
         info = Dict{Symbol, Any}(
             :eigvals => eig, :eigvecs => eigvec, :tangent => point.tangent,
