@@ -20,10 +20,10 @@ feed periodic-point search, local bifurcation analysis and parameter continuatio
 > dynamical systems", *Nonlinear Theory and Its Applications, IEICE*, 15(2), 284–298, 2024.
 > [doi:10.1587/nolta.15.284](https://doi.org/10.1587/nolta.15.284)
 
-> **Status:** MappyDS 0.1 covers the features of `mappy-ds` 0.1.0 (modes,
-> Poincaré maps, Jacobians and Hessians, periodic points and natural-parameter
-> continuation). Parameter derivatives, pseudo-arclength continuation, local
-> bifurcations and the Makie viewer follow in 0.2 and 0.3; see the plan in
+> **Status:** MappyDS 0.2 covers the features of `mappy-ds` 0.2.0 (modes,
+> Poincaré maps, Jacobians, Hessians and parameter derivatives, periodic
+> points, natural-parameter and pseudo-arclength continuation). Local
+> bifurcations and the Makie viewer follow in 0.3; see the plan in
 > [`docs/JULIA_RELEASE_PLAN.md`](https://github.com/Yuu-Miino/mappy/blob/master/docs/JULIA_RELEASE_PLAN.md)
 > of the Python repository.
 
