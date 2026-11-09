@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/Yuu-Miino/MappyDS.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/Yuu-Miino/MappyDS.jl/actions/workflows/CI.yml)
 [![Stable docs](https://img.shields.io/badge/docs-stable-blue.svg)](https://yuu-miino.github.io/doc.mappy/julia/stable/)
+[![Coverage](https://codecov.io/gh/Yuu-Miino/MappyDS.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/Yuu-Miino/MappyDS.jl)
 [![Dev docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://yuu-miino.github.io/doc.mappy/julia/dev/)
 [![ColPrac: Contributor's Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet)](https://github.com/SciML/ColPrac)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -124,3 +125,8 @@ Formatting follows [Runic](https://github.com/fredrikekre/Runic.jl); CI checks i
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow and the
+release procedure.
