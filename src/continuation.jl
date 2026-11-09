@@ -128,22 +128,35 @@ end
 
 # Newton on the bordered system; `nothing` if it does not converge. The last
 # evaluation of `fun` is at the returned point. Convergence is declared when
-# the Newton update is small; if the update never gets small (maps built on
-# ODE solves have a noise floor), the iterate with the smallest residual is
-# accepted provided that residual is already below the tolerance.
+# the Newton update is small. Maps built on ODE solves have a noise floor
+# below which the iteration stalls or wanders instead of converging; when
+# the residual stops decreasing (or `fun` fails at a wandering iterate), the
+# iterate with the smallest residual is accepted provided that residual is
+# already below the tolerance.
 function _arclength_corrector(fun, u_pred::Vector{Float64}, base::Vector{Float64}, t::Vector{Float64}, h::Float64, m::Int, newton_tol::Float64, newton_max_iter::Int)
     x = copy(u_pred)
     best_norm = Inf
     best_x = x
     for k in 1:newton_max_iter
-        res, jac = fun(x)
+        evaluation = try
+            fun(x)
+        catch err
+            err isa _RETRYABLE || rethrow()
+            nothing
+        end
+        evaluation === nothing && break
+        res, jac = evaluation
         res = Vector{Float64}(vec(res))
         jac = Matrix{Float64}(reshape(jac, m, m + 1))
         g = vcat(res, dot(t, x - base) - h)
         gnorm = norm(g)
         if gnorm < best_norm
+            stalled = k > 1 && gnorm > 0.5 * best_norm
             best_norm = gnorm
             best_x = x
+            stalled && break
+        else
+            break
         end
         bordered = vcat(jac, permutedims(t))
         dx = bordered \ (-g)
