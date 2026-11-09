@@ -151,7 +151,9 @@ end
     @test steps[pd[1] - 1].params.a < a_pd < steps[pd[1]].params.a
     @test !any(:fold in s.info[:events] for s in steps)
 
-    pmap = make_izhikevich_map()
+    # Arclength continuation needs the ODE tolerances well below the Newton
+    # tolerance of the corrector (see the docstring of arclength_continuation).
+    pmap = make_izhikevich_map(; reltol = 1.0e-8, abstol = 1.0e-10)
     p8 = merge(IZH_PARAMS, (I = 8.0,))
     ifp = find_cycle(pmap, [-4.6], p8).y
     isteps = trace_cycle_arclength(pmap, ifp, p8, :I; direction = -1, bounds = (4.5, 8.0), step = 0.1, step_max = 0.5)

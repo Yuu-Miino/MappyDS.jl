@@ -167,7 +167,7 @@ function _arclength_corrector(fun, u_pred::Vector{Float64}, base::Vector{Float64
             return nothing
         end
     end
-    if best_norm <= 100 * newton_tol * (1.0 + norm(best_x))
+    if best_norm <= 1000 * newton_tol * (1.0 + norm(best_x))
         res, jac = fun(best_x)  # the last evaluation must be at the returned point
         jac = Matrix{Float64}(reshape(jac, m, m + 1))
         return best_x, jac, max(best_k, 1)
@@ -215,6 +215,9 @@ it throws an `ErrorException` if `u0` cannot be corrected onto the curve.
 
 The arclength is measured in the Euclidean metric of `u`; if the state and
 the parameter have very different scales, rescale the parameter in `fun`.
+For maps built on ODE solves, the noise floor of the map limits the
+accuracy the corrector can reach: use solver tolerances well below
+`newton_tol` (e.g. `reltol = 1e-8, abstol = 1e-10`) or raise `newton_tol`.
 
 # Examples
 

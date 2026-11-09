@@ -64,6 +64,11 @@ steps = trace_cycle_arclength(Diffeomorphism(f), [0.5], (p = 0.25,), :p;
 [(s.params.p, s.y[1], s.info[:events]) for s in steps]
 ```
 
+For a Poincaré map of an ODE, integrate with tolerances well below the
+corrector's `newton_tol` (default `1e-10`), e.g. `reltol = 1e-8,
+abstol = 1e-10`: the noise floor of the map limits how far the Newton
+correction can converge.
+
 Between consecutive points the sign changes of ``\det(DT^n - I)``,
 ``\det(DT^n + I)`` and of the number of multipliers outside the unit circle
 flag `:fold`, `:branch_point`, `:period_doubling` and `:neimark_sacker`
