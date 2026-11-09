@@ -18,6 +18,7 @@
 # Python counterpart: `examples/duffing.py` of `mappy-ds`.
 
 using MappyDS, CairoMakie, StaticArrays
+using MappyDS: image  # Makie exports an `image` plot function as well
 
 duffing = VectorField(3; name = :duffing) do y, p
     x, v, t = y

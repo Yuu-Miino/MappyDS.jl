@@ -13,6 +13,7 @@
 # `examples/henon.py` of `mappy-ds`.
 
 using MappyDS, CairoMakie, StaticArrays
+using MappyDS: image  # Makie exports an `image` plot function as well
 
 henon = Mapping(2; name = :henon) do y, p
     x, u = y

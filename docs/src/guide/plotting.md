@@ -4,6 +4,11 @@ Plotting lives in a package extension that is loaded together with a Makie
 backend: `using GLMakie` for the interactive viewer, `using CairoMakie` for
 static figures (the core package does not depend on Makie).
 
+!!! note "Name clash with `image`"
+    Makie also exports a function named `image` (the image plot). With both
+    packages loaded, `image` has to be qualified or imported explicitly:
+    `using MappyDS: image` (or call `MappyDS.image`).
+
 ## Trajectories
 
 [`plot_trajectory`](@ref) draws a [`Trajectory`](@ref) segment by segment
