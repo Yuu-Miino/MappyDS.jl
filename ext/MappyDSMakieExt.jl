@@ -1,8 +1,7 @@
 module MappyDSMakieExt
 
-using MappyDS
-using MappyDS: AbstractMap, PoincareMap, Trajectory, TrajectorySegment, PlotConfig, LineStyle, MappyError, as_state, dim, end_mode, image_detail
-using Makie
+using MappyDS: MappyDS, AbstractMap, PoincareMap, Trajectory, TrajectorySegment, PlotConfig, LineStyle, MappyError, as_state, dim, end_mode, image_detail
+using Makie: Axis, Consume, Figure, Keyboard, Mouse, events, lines!, mouseposition, on, scatter!
 
 _style_for(styles::LineStyle, mode, default::LineStyle) = styles
 function _style_for(styles::Dict{Symbol, LineStyle}, mode, default::LineStyle)
@@ -60,7 +59,7 @@ function MappyDS.plot2d(map::AbstractMap, y0, p = nothing, config::PlotConfig = 
     iterate() = is_pmap ? image_detail(map, state.y, state.params; jacobian = false, trajectory = true, mode = state.mode) :
         image_detail(map, state.y, state.params; jacobian = false, trajectory = true)
 
-    function update!()
+    function advance!()
         state.stalled && return nothing
         clicked = state.clicked
         state.clicked = false
@@ -96,7 +95,7 @@ function MappyDS.plot2d(map::AbstractMap, y0, p = nothing, config::PlotConfig = 
 
     if frames !== nothing
         for _ in 1:frames
-            update!()
+            advance!()
         end
         show && display(fig)
         return fig
@@ -152,7 +151,7 @@ function MappyDS.plot2d(map::AbstractMap, y0, p = nothing, config::PlotConfig = 
     end
 
     on(events(fig).tick) do _
-        update!()
+        advance!()
         return nothing
     end
 

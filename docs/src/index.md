@@ -16,11 +16,11 @@ tensor**, which feed periodic-point search, local bifurcation analysis and
 parameter continuation.
 
 !!! note "Status"
-    MappyDS 0.2 covers the features of `mappy-ds` 0.2.0: modes, Poincaré maps,
-    Jacobians, Hessians and parameter derivatives, periodic points,
-    natural-parameter and pseudo-arclength continuation. Local bifurcation
-    analysis and the Makie viewer follow in 0.3; see
-    [Python package](@ref) for the feature matrix.
+    MappyDS 0.3 covers the features of `mappy-ds` 0.3.0: modes, Poincaré maps,
+    Jacobians, Hessians, parameter and mixed derivatives, periodic points,
+    natural-parameter and pseudo-arclength continuation, local bifurcations
+    and their continuation, and the Makie viewer. See [Python package](@ref)
+    for the feature matrix.
 
 ## Installation
 
