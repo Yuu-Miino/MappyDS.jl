@@ -8,7 +8,7 @@ tracks which Python release each Julia release matches.
 | --- | --- | --- |
 | 0.1 | 0.1.0 | modes, Poincaré maps, Jacobian and Hessian, `find_cycle`, `continuation` / `trace_cycle` |
 | 0.2 | 0.2.0 | parameter derivatives `jac_p` (`parameter_jacobian`), `arclength_continuation`, `trace_cycle_arclength` |
-| 0.3 | 0.3.0 | mixed derivatives `hes_p`, local bifurcations and their continuation, Makie viewer |
+| 0.3 | 0.3.0 | mixed derivatives `hes_p` (`parameter_hessian`), `find_local_bf`, `trace_local_bf`, `trace_local_bf_arclength`, Makie viewer |
 
 ## API mapping
 

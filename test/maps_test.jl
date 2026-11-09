@@ -333,3 +333,26 @@ end
     @test size(ires.jac_p) == (1, 5)
     @test ires.jac_p ≈ fd_param(izh, -3.0, IZH_PARAMS; n = 2) rtol = 1.0e-5 atol = 1.0e-6
 end
+
+@testitem "mixed Hessian of maps" setup = [Fixtures] begin
+    function fd_hes_p(m, y0, params; n = 1, h = 1.0e-6)
+        cols = map(keys(params)) do k
+            up = image_detail(m, y0, merge(params, NamedTuple{(k,)}((params[k] + h,))); n).jac
+            dn = image_detail(m, y0, merge(params, NamedTuple{(k,)}((params[k] - h,))); n).jac
+            return (up - dn) / (2h)
+        end
+        return cat(cols...; dims = 3)
+    end
+    hmap = henon_map()
+    y0 = [0.1, 0.2]
+    res = image_detail(hmap, y0, HENON_PARAMS; n = 3, parameter_hessian = true)
+    @test res.hes !== nothing && res.jac_p !== nothing  # implied
+    @test res.hes_p !== nothing && size(res.hes_p) == (2, 2, 2)
+    @test res.hes_p ≈ fd_hes_p(hmap, y0, HENON_PARAMS; n = 3) rtol = 1.0e-6 atol = 1.0e-7
+    @test image_detail(hmap, y0, HENON_PARAMS; parameter_jacobian = true).hes_p === nothing
+
+    izh = make_izhikevich_map(; TIGHT...)
+    ires = image_detail(izh, -3.0, IZH_PARAMS; parameter_hessian = true)
+    @test size(ires.hes_p) == (1, 1, 5)
+    @test ires.hes_p ≈ fd_hes_p(izh, -3.0, IZH_PARAMS; h = 1.0e-5) rtol = 1.0e-5 atol = 1.0e-7
+end

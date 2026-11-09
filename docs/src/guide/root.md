@@ -72,7 +72,36 @@ correction can converge.
 Between consecutive points the sign changes of ``\det(DT^n - I)``,
 ``\det(DT^n + I)`` and of the number of multipliers outside the unit circle
 flag `:fold`, `:branch_point`, `:period_doubling` and `:neimark_sacker`
-events in `info[:events]`; the continuation of the bifurcation points
-themselves arrives in MappyDS 0.3. The generic algorithm is
+events in `info[:events]`. The generic algorithm is
 [`arclength_continuation`](@ref), which follows the zero set of any
 ``F : \mathbb{R}^{m+1} \to \mathbb{R}^m`` given `fun(u) -> (F, J)`.
+
+## Local bifurcations
+
+A periodic point undergoes a local bifurcation when a characteristic
+multiplier crosses the unit circle at ``μ = e^{iθ}``.
+[`find_local_bf`](@ref) solves the ``d + 2`` equations
+
+```math
+T^n(y) - y = 0, \qquad \det(DT^n(y) - e^{iθ} I) = 0 \;(\text{real and imaginary parts})
+```
+
+for ``(y, λ, θ)``, with the fully analytic Jacobian assembled from the
+map's `jac`, `hes`, `jac_p` and `hes_p` (requested with
+`parameter_hessian = true`). The initial `theta` selects the bifurcation:
+`0` for a tangent (saddle-node), `pi` for a period doubling, any other value
+for a Neimark–Sacker bifurcation.
+
+```julia
+params = (a = 0.35, b = 0.3)
+fp = find_cycle(hmap, [0.9, 0.3], params)
+bf = find_local_bf(hmap, fp.y, params, :a, pi)
+bf.params.a   # ≈ 0.3675 = 3(1 - b)²/4, the exact period-doubling value
+```
+
+[`trace_local_bf`](@ref) follows the bifurcation point while a second
+parameter is swept, and [`trace_local_bf_arclength`](@ref) follows the
+bifurcation curve by pseudo-arclength continuation in the
+``(y, λ_{bf}, θ, λ_{cnt})`` space, so that it passes cusps; it flags
+`:fold`, the strong resonances `:resonance_1_1` … `:resonance_1_4` on
+Neimark–Sacker curves and `:second_multiplier_crossing` events.

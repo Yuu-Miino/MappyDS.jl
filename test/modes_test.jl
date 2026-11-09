@@ -216,3 +216,49 @@ end
     # correction term the derivative with respect to c would vanish.
     @test res.jac_p[1, 2] ≈ 1.0 rtol = 1.0e-8
 end
+
+@testitem "discrete mode mixed Hessian" setup = [Fixtures] begin
+    mode = DiscreteMode(:h, henon)
+    res = evolve(mode, [0.3, -0.2], HENON_PARAMS; parameter_hessian = true)
+    @test res.hes_p !== nothing && size(res.hes_p) == (2, 2, 2)
+    @test res.hes_p[1, 1, 1] ≈ -0.6
+    @test res.jac_p !== nothing  # implied
+    @test evolve(mode, [0.3, -0.2], HENON_PARAMS; parameter_jacobian = true).hes_p === nothing
+end
+
+@testitem "mixed Hessian with a parametrised border is exact" setup = [Fixtures] begin
+    # ẏ = (1, v) stopped at y1 = c y2: T is known in closed form,
+    # τ = (c y2 - y1) / (1 - c v), T = (y1 + τ, y2 + v τ). The border depends on
+    # the state *and* on c, so every term of the correction is exercised.
+    using StaticArrays: SVector
+    using ForwardDiff
+    field = VectorField((y, p) -> SVector(one(y[1]), p.v + zero(y[1])), 2)
+    stop = Border((y, p) -> y[1] - p.c * y[2], 2)
+    mode = ContinuousMode(:m, field; borders = (stop,), TIGHT...)
+    params = (v = 0.3, c = 2.0)
+    y0 = [0.1, 0.5]
+    res = evolve(mode, y0, params; hessian = true, parameter_hessian = true)
+    function exact(y, pv)
+        v, c = pv
+        tau = (c * y[2] - y[1]) / (1 - c * v)
+        return [y[1] + tau, y[2] + v * tau]
+    end
+    pv0 = [params.v, params.c]
+    jac_p_exact = ForwardDiff.jacobian(pv -> exact(y0, pv), pv0)
+    hes_p_exact = reshape(ForwardDiff.jacobian(pv -> vec(ForwardDiff.jacobian(y -> exact(y, pv), y0)), pv0), 2, 2, 2)
+    @test res.jac_p ≈ jac_p_exact rtol = 1.0e-7 atol = 1.0e-9
+    @test res.hes_p ≈ hes_p_exact rtol = 1.0e-7 atol = 1.0e-9
+    @test res.hes_p[1, 2, 2] != 0.0  # the q_xp term contributes
+end
+
+@testitem "mixed Hessian of a continuous mode matches finite differences" setup = [Fixtures] begin
+    mode = ContinuousMode(:A, izhikevich; borders = (fire,), TIGHT...)
+    res = evolve(mode, IZH_Y0_MODE, IZH_PARAMS; parameter_hessian = true)
+    @test res.hes_p !== nothing && size(res.hes_p) == (2, 2, 5)
+    h = 1.0e-5
+    for (m, key) in enumerate(keys(IZH_PARAMS))
+        up = evolve(mode, IZH_Y0_MODE, merge(IZH_PARAMS, NamedTuple{(key,)}((IZH_PARAMS[key] + h,))); jacobian = true).jac
+        dn = evolve(mode, IZH_Y0_MODE, merge(IZH_PARAMS, NamedTuple{(key,)}((IZH_PARAMS[key] - h,))); jacobian = true).jac
+        @test res.hes_p[:, :, m] ≈ (up - dn) / (2h) rtol = 1.0e-5 atol = 1.0e-7
+    end
+end

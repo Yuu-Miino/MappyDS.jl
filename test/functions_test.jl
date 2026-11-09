@@ -110,3 +110,21 @@ end
     # Border parameters.
     @test parameter_jacobian(Border((y, p) -> y[1] - p.c, 1), [0.5], (c = 2.0, r = 1.0)) == [-1.0 0.0]
 end
+
+@testitem "mixed Hessian of a system function" setup = [Fixtures] begin
+    using StaticArrays: SVector
+    y = [0.3, -0.2]
+    hp = mixed_hessian(henon, y, HENON_PARAMS)
+    @test hp isa Array{Float64, 3}
+    @test size(hp) == (2, 2, 2)  # (cod, dom, k) with k = (a, b)
+    expected = zeros(2, 2, 2)
+    expected[1, 1, 1] = -2 * y[1]  # ∂²f_1/∂x∂a
+    expected[2, 1, 2] = 1.0        # ∂²f_2/∂x∂b
+    @test hp ≈ expected
+    out = mixed_hessian(henon, y, (zzz = 1.0, b = 0.3))
+    @test size(out) == (2, 2, 2)
+    @test all(iszero, out[:, :, 1])
+    @test out[2, 1, 2] ≈ 1.0
+    f = Mapping((y, _) -> SVector(y[2], -y[1]), 2)
+    @test size(mixed_hessian(f, [1.0, 2.0])) == (2, 2, 0)
+end

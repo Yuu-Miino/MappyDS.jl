@@ -75,6 +75,15 @@ are integrated with the state, and the border correction becomes
 on the parameters are handled. Across modes the chain rule reads
 ``\partial_p (g \circ f) = Dg\, \partial_p f + \partial_p g``.
 
+With `parameter_hessian = true` the mixed second derivative
+`hes_p[i, j, m] = ∂²y_i/(∂y0_j ∂p_m)` is computed as well, from
+[`mixed_hessian`](@ref) of the system functions, a third variational system
+``\dot M_{ijm} = \sum_{l,r} (D^2 f)_{ilr} J_{lj} P_{rm} + \sum_l (\partial_p Df)_{ilm} J_{lj} + \sum_l (Df)_{il} M_{ljm}``
+with its border correction, and the chain rule
+``\partial_p D(g \circ f) = D^2 g[Df, \partial_p f] + (\partial_p Dg) Df + Dg\, \partial_p Df``.
+It is what makes the Jacobian of the bifurcation conditions in
+[`find_local_bf`](@ref) fully analytic.
+
 ## Checking derivatives
 
 Finite differences are a convenient check:

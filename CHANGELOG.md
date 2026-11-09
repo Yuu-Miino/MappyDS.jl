@@ -8,6 +8,29 @@ as interpreted by Julia's Pkg (in `0.x`, a minor bump is breaking).
 
 ## [Unreleased]
 
+Mixed derivatives and local bifurcation analysis (the features of
+`mappy-ds` 0.3.0).
+
+### Added
+
+- Mixed second derivatives: `mixed_hessian(f, y, p)` for system functions,
+  `evolve(...; parameter_hessian = true)` returning `StepResult.hes_p`
+  (`∂²y_i/∂y0_j∂p_m`) from a third variational system in continuous modes
+  with its border correction (including borders that depend on
+  parameters), and `image_detail(...; parameter_hessian = true)` returning
+  `MapResult.hes_p` through the chain rule across modes.
+- `find_local_bf`: tangent, period-doubling and Neimark–Sacker bifurcation
+  points of periodic points, solved from `(Tⁿ(y) - y, Re det A, Im det A)`
+  with `A = DTⁿ - e^{iθ} I` and the fully analytic Jacobian of the system
+  (cofactor matrix; `jac`, `hes`, `jac_p` and `hes_p` of the map);
+  `LocalBfResult`.
+- `trace_local_bf` (natural-parameter continuation of a bifurcation point
+  along a second parameter) and `trace_local_bf_arclength` (pseudo-arclength
+  continuation of the bifurcation curve in the `(y, λ_bf, θ, λ_cnt)` space,
+  passing cusps and flagging `:fold`, the strong resonances
+  `:resonance_1_1` … `:resonance_1_4` on Neimark–Sacker curves and
+  `:second_multiplier_crossing`).
+
 ## [0.2.0] - 2026-11-09
 
 Parameter derivatives of the Poincaré map and pseudo-arclength
