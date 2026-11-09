@@ -8,6 +8,8 @@ as interpreted by Julia's Pkg (in `0.x`, a minor bump is breaking).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-09
+
 Mixed derivatives and local bifurcation analysis (the features of
 `mappy-ds` 0.3.0).
 
@@ -105,6 +107,7 @@ Port of `mappy-ds` 0.1.0 (the mode concept and the numerics of Miino,
 - CI (tests on Julia LTS / stable / pre-release, Runic, docs), TagBot,
   Dependabot, Documenter deployment into `doc.mappy/julia/`.
 
-[Unreleased]: https://github.com/Yuu-Miino/MappyDS.jl/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Yuu-Miino/MappyDS.jl/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Yuu-Miino/MappyDS.jl/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Yuu-Miino/MappyDS.jl/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Yuu-Miino/MappyDS.jl/releases/tag/v0.1.0
