@@ -8,12 +8,26 @@ as interpreted by Julia's Pkg (in `0.x`, a minor bump is breaking).
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-12
+
+Documentation and project metadata only; no change to the package code.
+
 ### Added
 
 - `bench/`: per-operation benchmarks of MappyDS.jl against `mappy-ds`
   (Python) on the same systems, the manual *Benchmark* workflow that runs
   both on one runner, and a "Performance" page in the docs with the
   measured table.
+- `CONTRIBUTING.md` with the development workflow and the release
+  procedure; `.zenodo.json` and `CITATION.cff` with the author metadata; the
+  Zenodo concept DOI (`10.5281/zenodo.24152370`) in the README and
+  `CITATION.bib`; a coverage badge.
+
+### Fixed
+
+- The worked examples show their printed results before the figures.
+- TagBot pushes tags with a deploy key of this repository (`TAGBOT_KEY`), so
+  that the versioned docs are built for each tag.
 
 ## [0.3.0] - 2026-11-09
 
@@ -114,7 +128,8 @@ Port of `mappy-ds` 0.1.0 (the mode concept and the numerics of Miino,
 - CI (tests on Julia LTS / stable / pre-release, Runic, docs), TagBot,
   Dependabot, Documenter deployment into `doc.mappy/julia/`.
 
-[Unreleased]: https://github.com/Yuu-Miino/MappyDS.jl/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/Yuu-Miino/MappyDS.jl/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/Yuu-Miino/MappyDS.jl/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/Yuu-Miino/MappyDS.jl/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Yuu-Miino/MappyDS.jl/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Yuu-Miino/MappyDS.jl/releases/tag/v0.1.0
