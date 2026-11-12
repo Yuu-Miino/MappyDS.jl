@@ -5,6 +5,7 @@
 [![Coverage](https://codecov.io/gh/Yuu-Miino/MappyDS.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/Yuu-Miino/MappyDS.jl)
 [![Dev docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://yuu-miino.github.io/doc.mappy/julia/dev/)
 [![ColPrac: Contributor's Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet)](https://github.com/SciML/ColPrac)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24152370.svg)](https://doi.org/10.5281/zenodo.24152370)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Poincaré maps, periodic points and bifurcations of **hybrid (smooth / non-smooth)
@@ -125,6 +126,13 @@ Formatting follows [Runic](https://github.com/fredrikekre/Runic.jl); CI checks i
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Citing
+
+If you use MappyDS.jl in your research, please cite the paper above and the
+software (concept DOI, all versions:
+[10.5281/zenodo.24152370](https://doi.org/10.5281/zenodo.24152370)); see
+[CITATION.bib](CITATION.bib).
 
 ## Contributing
 
