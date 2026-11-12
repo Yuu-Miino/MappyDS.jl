@@ -1,0 +1,35 @@
+{
+  "title": "MappyDS.jl: Poincaré maps, periodic points and bifurcations of hybrid dynamical systems",
+  "description": "<p>Julia implementation of the mode concept (Miino, NOLTA IEICE 15(2), 2024): a hybrid or piecewise-smooth dynamical system is written as a graph of modes (ODE flows ending on a border, or discrete maps) and composed into a Poincaré map together with its Jacobian, Hessian, parameter derivatives and mixed second derivatives, which feed periodic-point search, local bifurcation analysis and parameter continuation. Julia counterpart of the Python package mappy-ds.</p>",
+  "creators": [
+    {
+      "name": "Miino, Yuu"
+    }
+  ],
+  "license": "MIT",
+  "upload_type": "software",
+  "access_right": "open",
+  "keywords": [
+    "Julia",
+    "dynamical systems",
+    "hybrid systems",
+    "piecewise-smooth systems",
+    "Poincaré map",
+    "bifurcation analysis",
+    "numerical continuation"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.1587/nolta.15.284",
+      "relation": "isSupplementTo",
+      "resource_type": "publication-article",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "https://github.com/Yuu-Miino/mappy",
+      "relation": "isDerivedFrom",
+      "resource_type": "software",
+      "scheme": "url"
+    }
+  ]
+}

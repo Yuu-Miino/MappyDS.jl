@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use MappyDS.jl, please cite the software (concept DOI below) and the paper in preferred-citation."
+type: software
+title: "MappyDS.jl: Poincaré maps, periodic points and bifurcations of hybrid dynamical systems"
+authors:
+  - family-names: Miino
+    given-names: Yuu
+license: MIT
+repository-code: "https://github.com/Yuu-Miino/MappyDS.jl"
+url: "https://yuu-miino.github.io/doc.mappy/julia/stable/"
+doi: 10.5281/zenodo.24152370
+keywords:
+  - Julia
+  - dynamical systems
+  - hybrid systems
+  - Poincaré map
+  - bifurcation analysis
+preferred-citation:
+  type: article
+  title: "Mode concept to construct diffeomorphisms representing smooth/non-smooth dynamical systems"
+  authors:
+    - family-names: Miino
+      given-names: Yuu
+  journal: "Nonlinear Theory and Its Applications, IEICE"
+  volume: 15
+  issue: 2
+  start: 284
+  end: 298
+  year: 2024
+  doi: 10.1587/nolta.15.284
