@@ -1,0 +1,58 @@
+name: Benchmark
+
+# Manual only: compares per-operation timings of mappy-ds (Python) and
+# MappyDS.jl (Julia) on the same runner. Results go to the job summary and
+# to the artifact `benchmark-results`.
+on:
+  workflow_dispatch:
+    inputs:
+      scale:
+        description: "Scale factor for the batch sizes (1 = full)"
+        default: "1"
+      mappy_ref:
+        description: "Git ref of Yuu-Miino/mappy to benchmark"
+        default: "master"
+
+permissions:
+  contents: read
+
+jobs:
+  bench:
+    name: Python vs Julia
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: '1'
+      - uses: julia-actions/cache@v3
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install mappy-ds
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "git+https://github.com/Yuu-Miino/mappy@${{ github.event.inputs.mappy_ref }}"
+          python -c "import mappy_ds, numpy, scipy, sympy; print('mappy-ds', mappy_ds.__version__ if hasattr(mappy_ds, '__version__') else '?', 'numpy', numpy.__version__, 'scipy', scipy.__version__, 'sympy', sympy.__version__)"
+      - name: Python benchmark
+        run: python bench/bench.py bench_python.json ${{ github.event.inputs.scale }}
+      - name: Instantiate the Julia benchmark environment
+        shell: julia --project=bench --color=yes {0}
+        run: |
+          using Pkg
+          Pkg.develop(PackageSpec(path = pwd()))
+          Pkg.instantiate()
+          Pkg.status()
+      - name: Julia benchmark
+        run: julia --project=bench --color=yes bench/bench.jl bench_julia.json ${{ github.event.inputs.scale }}
+      - name: Summary
+        run: |
+          python bench/summarize.py bench_python.json bench_julia.json "$GITHUB_STEP_SUMMARY"
+          nproc; lscpu | grep -i "model name" || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: |
+            bench_python.json
+            bench_julia.json
