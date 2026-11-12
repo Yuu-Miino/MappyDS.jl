@@ -64,4 +64,7 @@ The docs are deployed to the shared documentation repository
 [`doc.mappy`](https://github.com/Yuu-Miino/doc.mappy) under `julia/`, next to
 the Sphinx docs of the Python package. This needs the secret `DOCUMENTER_KEY`
 (an SSH deploy key of `doc.mappy` with write access, base64-encoded) in this
-repository; TagBot uses the same key.
+repository. TagBot pushes tags with a second key, `TAGBOT_KEY`, a deploy key
+of this repository with write access: a tag pushed with the default
+`GITHUB_TOKEN` would not trigger the CI workflow, so the versioned docs
+would never be built.
