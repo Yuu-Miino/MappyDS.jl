@@ -8,6 +8,13 @@ as interpreted by Julia's Pkg (in `0.x`, a minor bump is breaking).
 
 ## [Unreleased]
 
+### Added
+
+- `bench/`: per-operation benchmarks of MappyDS.jl against `mappy-ds`
+  (Python) on the same systems, the manual *Benchmark* workflow that runs
+  both on one runner, and a "Performance" page in the docs with the
+  measured table.
+
 ## [0.3.0] - 2026-11-09
 
 Mixed derivatives and local bifurcation analysis (the features of

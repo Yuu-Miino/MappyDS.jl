@@ -22,3 +22,5 @@ tracks which Python release each Julia release matches.
 | `mappy_ds.root.find_cycle`, `find_local_bf`, `trace_*` | same names |
 | `mappy_ds.plot.plot2d`, `plot_trajectory` | same names, via the Makie extension |
 | `params` (`dict`) | `NamedTuple`; `param_keys` are all its keys |
+
+See [Performance](@ref) for per-operation timings of the two implementations.

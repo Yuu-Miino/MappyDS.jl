@@ -42,6 +42,7 @@ makedocs(;
         "Working examples" => ["examples.md"; ["examples/$name.md" for name in EXAMPLES]],
         "API reference" => "api.md",
         "Python package" => "python.md",
+        "Performance" => "performance.md",
         "References" => "references.md",
     ],
     plugins = [links, bib],
