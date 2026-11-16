@@ -27,7 +27,7 @@ jobs:
         with:
           version: '1'
       - uses: julia-actions/cache@v3
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Install mappy-ds
@@ -50,7 +50,7 @@ jobs:
         run: |
           python bench/summarize.py bench_python.json bench_julia.json "$GITHUB_STEP_SUMMARY"
           nproc; lscpu | grep -i "model name" || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: benchmark-results
           path: |
